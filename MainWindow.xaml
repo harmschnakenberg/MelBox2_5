@@ -1,0 +1,65 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MelBox2_5"
+        xmlns:Properties="clr-namespace:MelBox2_5.Properties" x:Class="MelBox2_5.MainWindow"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800" Closing="Window_Closing">
+
+    <Grid>
+
+        <TabControl>
+            <TabItem Header="Modem">
+                <DockPanel >
+                    <StatusBar DockPanel.Dock="Bottom">
+                        <StatusBarItem Content="Status" />
+                    </StatusBar>
+                    
+                    <Button DockPanel.Dock="Top" Height="50" Content="Top"/>
+                    <GroupBox Header="COM-Port" DockPanel.Dock="Left" Padding="5" >
+                        <Grid x:Name="SerialSettingsGrid" >
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Label Grid.Row="1" Content="PortName"/>
+                            <Label Grid.Row="2" Content="Baud-Rate:"/>
+                            <Label Grid.Row="3" Content="Data-Bits:"/>
+                            <Label Grid.Row="4" Content="Parität:"/>
+                            <Label Grid.Row="5" Content="Stop-Bits:"/>
+
+                            <Label Grid.Row="1" Grid.Column="1" Content="{Binding PortName}"/>
+                            <Label Grid.Row="2" Grid.Column="1" Content="{Binding BaudRate}"/>
+                            <Label Grid.Row="3" Grid.Column="1" Content="{Binding DataBits}"/>
+                            <Label Grid.Row="4" Grid.Column="1" Content="{Binding Parity}"/>
+                            <Label Grid.Row="5" Grid.Column="1" Content="{Binding StopBits}"/>
+
+                        </Grid>
+                    </GroupBox>
+                    
+                   
+                    <Button DockPanel.Dock="Right" Width="50" Content="Right"/>
+
+                    <GroupBox Header="Verlauf">
+                        <ScrollViewer>
+                            <TextBox x:Name="Gsm_TextBox_SerialPortResponse" Text="Programmstart" />
+                        </ScrollViewer>
+                    </GroupBox>
+                </DockPanel>
+            </TabItem>
+
+
+        </TabControl>
+    </Grid>
+</Window>
