@@ -35,13 +35,15 @@ namespace MelBox2_5
             //Port bereit?
             if (port == null)
             {
-                MessageBox.Show("2003111425 serieller Port ist unbestimmt. Befehl an GSM-Modem wird abgebrochen.");                
+                //MessageBox.Show("2003111425 serieller Port ist unbestimmt. Befehl an GSM-Modem wird abgebrochen.");
+                Log(Topic.COM, Prio.Fehler, 2003111550, "Der serielle Port ist unbestimmt. Befehl an GSM-Modem wird abgebrochen.");
                 return;
             }
 
             if (!SerialPort.GetPortNames().ToList().Contains(port.PortName))
             {
-                MessageBox.Show("2003111551 Der Port >" + port.PortName + " < existiert nicht.");
+                //MessageBox.Show("2003111551 Der Port >" + port.PortName + " < existiert nicht.");
+                Log(Topic.COM, Prio.Fehler, 2003111551, "Der Port >" + port.PortName + " < existiert nicht.");
                 return;
             }
 
@@ -49,8 +51,7 @@ namespace MelBox2_5
             {
                 if (!port.IsOpen)
                 {
-                   // MessageBox.Show("2003110953 Port >" + port.PortName + "< ist nicht offen. Versuche zu öffnen");
-
+                    // MessageBox.Show("2003110953 Port >" + port.PortName + "< ist nicht offen. Versuche zu öffnen");
                     SpManager.SerialPort.Open();
                     System.Threading.Thread.Sleep(500);
                 }
@@ -62,8 +63,9 @@ namespace MelBox2_5
                 //MessageBox.Show("PortComandExe(" + command + ")");
             }
             catch (System.IO.IOException ex_io)
-            {
-                MessageBox.Show("2003110956 Konnte Befehl nicht an COM-Port senden.\r\n" + ex_io.Message);
+            { 
+                //MessageBox.Show("2003110956 Konnte Befehl nicht an COM-Port senden.\r\n" + ex_io.Message);
+                Log(Topic.COM, Prio.Fehler, 2003110956, "Konnte Befehl nicht an COM-Port senden: " + ex_io.Message);
                 return;
             }
 
@@ -107,7 +109,7 @@ namespace MelBox2_5
             if (!SerialPort.GetPortNames().Contains(SerialSettings.PortName))
             {
                 string msg = ">" + SerialSettings.PortName + "< ist kein gültiger COM-Port-Name.";
-                MessageBox.Show(msg, "ACHTUNG", MessageBoxButton.OK, MessageBoxImage.Error);
+              //  MessageBox.Show(msg, "ACHTUNG", MessageBoxButton.OK, MessageBoxImage.Error);
                 MainWindow.Log(MainWindow.Topic.COM, MainWindow.Prio.Fehler, 2003262224, msg);
                 return;
             }
@@ -145,13 +147,13 @@ namespace MelBox2_5
             catch (ArgumentException ex_arg)
             {
                 string msg = "Die COM-Port-Einstellungen für >" + SerialSettings.PortName + "< sind fehlerhaft. Config-Datei prüfen. " + ex_arg.Message;
-                MessageBox.Show(msg, "ACHTUNG", MessageBoxButton.OK, MessageBoxImage.Error);
+                //MessageBox.Show(msg, "ACHTUNG", MessageBoxButton.OK, MessageBoxImage.Error);
                 MainWindow.Log(MainWindow.Topic.COM, MainWindow.Prio.Fehler, 2003262224, msg);
             }
             catch (System.IO.IOException ex_io)
             {
                 string msg = "Das Gsm-Modem konnte nicht erreicht werden. " + ex_io.Message;
-                MessageBox.Show(msg, "ACHTUNG", MessageBoxButton.OK, MessageBoxImage.Error);
+                //MessageBox.Show(msg, "ACHTUNG", MessageBoxButton.OK, MessageBoxImage.Error);
                 MainWindow.Log(MainWindow.Topic.COM, MainWindow.Prio.Fehler, 2003262224, msg);
             }
         }

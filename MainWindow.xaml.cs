@@ -1,17 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace MelBox2_5
 {
@@ -29,12 +17,15 @@ namespace MelBox2_5
         {
             InitializeComponent();
 
-            SerialSettingsGrid.DataContext = new SerialSettings();
-
             InitializeSerialPort();
             SpManager.StartListening();
+
+            SerialSettingsGrid.DataContext = SpManager.SerialPort;// new SerialSettings();
+            Status_DockPanel.DataContext = new StatusClass();
+
             StartSignalQualityCheckTimer();
 
+            Status_TextBlock_StartUpTime.Text = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
             Log(Topic.General, Prio.Info, 2003181727, "Neustart MelBox2");
         }
 
@@ -42,5 +33,8 @@ namespace MelBox2_5
         {
             SpManager.Dispose();
         }
+
+
+
     }
 }

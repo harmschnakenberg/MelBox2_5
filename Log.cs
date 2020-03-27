@@ -35,8 +35,10 @@ namespace MelBox2_5
             switch (prio)
             {
                 case Prio.Fehler:
+                    ++StatusClass.ErrorCount;
+                    break;
                 case Prio.Warnung:
-                    StatusClass.ErrorCount++;
+                    ++StatusClass.WarningCount;
                     break;
             }
             Sql Sql = new Sql();

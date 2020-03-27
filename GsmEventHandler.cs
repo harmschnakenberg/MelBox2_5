@@ -1,16 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Threading;
+using System.Windows.Media;
+using System.Windows.Controls;
 
 namespace MelBox2_5
 {
+  
     public partial class MainWindow : Window
     {
+        private void Gsm_TextBox_SerialPortResponse_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Gsm_ScrollViewer_SerialPortResponse.ScrollToEnd();
+        }
+
         /// <summary>
         /// Liest die vom COM-Port erhaltenden Daten und schreibt sie in eine TextBox.
         /// </summary>
@@ -85,8 +95,8 @@ namespace MelBox2_5
                     //Mögliche Werte: 2 - 9 marginal, 10 - 14 OK, 15 - 19 Good, 20 - 30 Excellent, 99 = kein Signal
                     int.TryParse(m.Value.Remove(0, 4).Trim(','), out int signalQuality);
 
-                    //this.Gsm_TextBox_SerialPortResponse.Dispatcher.Invoke(DispatcherPriority.Normal,
-                    //    new Action(() => { this.Gsm_ProgressBar_SignalQuality.Value = signalQuality; }));
+                    this.Gsm_TextBox_SerialPortResponse.Dispatcher.Invoke(DispatcherPriority.Normal,
+                        new Action(() => { this.Gsm_ProgressBar_SignalQuality.Value = signalQuality; }));
 
                     StatusClass.GsmSignalQuality = signalQuality;
 
@@ -104,4 +114,47 @@ namespace MelBox2_5
 
 
     }
+
+    /// <summary>
+    /// Ändert die Farbe der Progressbar in Abhänigkeit der Signalstärke
+    /// </summary>
+    public class ProgressForegroundConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            double progress = (double)value;
+            System.Windows.Media.Brush foreground = System.Windows.Media.Brushes.Green;
+
+            //Mögliche Werte: 2 - 9 marginal, 10 - 14 OK, 15 - 19 Good, 20 - 30 Excellent, 99 = kein Signal
+
+            if (progress < 3 || progress >= 30)
+            {
+                foreground = Brushes.Red;
+            }
+            else if (progress < 9)
+            {
+                foreground = Brushes.DarkOrange;
+            }
+            else if (progress < 15)
+            {
+                foreground = Brushes.YellowGreen;
+            }
+            else if (progress < 20)
+            {
+                foreground = Brushes.Green;
+            }
+            else if (progress < 30)
+            {
+                foreground = Brushes.DarkGreen;
+            }
+
+            return foreground;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 }
