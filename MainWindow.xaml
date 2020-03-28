@@ -34,7 +34,7 @@
                         <StatusBarItem>
                             <WrapPanel>
                                 <Image Source="/Resources/inbox.png" Margin="2,0" Width="15" ToolTip="Eingang"/>
-                                <TextBlock Text="{Binding InBoxCount}" ToolTip="in Bearbeitung"/>
+                                <TextBlock Text="{Binding InBox.Count}" ToolTip="in Bearbeitung"/>
                                 <TextBlock Text="/"/>
                                 <TextBlock Text="{Binding InMsgsSinceStartup}" ToolTip="seit Neustart"/>
                             </WrapPanel>
@@ -42,8 +42,15 @@
                         <Separator Width="1" HorizontalAlignment="Center"/>
                         <StatusBarItem>
                             <WrapPanel>
+                                <Image Source="/Resources/server.png" Margin="2,0" Width="15" ToolTip="Meldungen in der Datenbank"/>
+                                <TextBlock Text="{Binding MessagesInDb}"/>
+                            </WrapPanel>
+                        </StatusBarItem>
+                        <Separator Width="1" HorizontalAlignment="Center"/>
+                        <StatusBarItem>
+                            <WrapPanel>
                                 <Image Source="/Resources/outbox.png" Margin="2,0" Width="15" ToolTip="Ausgang"/>
-                                <TextBlock Text="{Binding OutBoxCount}" ToolTip="in Bearbeitung"/>
+                                <TextBlock Text="{Binding OutBox.Count}" ToolTip="in Bearbeitung"/>
                                 <TextBlock Text="/"/>
                                 <TextBlock Text="{Binding OutMsgsSinceStartup}" ToolTip="seit Neustart"/>
                             </WrapPanel>
@@ -55,13 +62,6 @@
                                 <TextBlock Text="{Binding ErrorCount}" Foreground="Red"/>
                                 <TextBlock Text="/"/>
                                 <TextBlock Text="{Binding WarningCount}" Foreground="Orange"/>
-                            </WrapPanel>
-                        </StatusBarItem>
-                        <Separator Width="1" HorizontalAlignment="Center"/>
-                        <StatusBarItem>
-                            <WrapPanel>
-                                <Image Source="/Resources/server.png" Margin="2,0" Width="15" ToolTip="Meldungen in der Datenbank"/>
-                                <TextBlock Text="{Binding MessagesInDb}"/>
                             </WrapPanel>
                         </StatusBarItem>
                         <Separator Width="1" HorizontalAlignment="Center"/>
@@ -114,7 +114,9 @@
                     </GroupBox>
 
 
-                    <Button DockPanel.Dock="Right" Width="50" Content="Right"/>
+                    <GroupBox Header="Aktionen" DockPanel.Dock="Right" >
+                        
+                    </GroupBox>
 
                     <GroupBox Header="Verlauf">
                         <ScrollViewer x:Name="Gsm_ScrollViewer_SerialPortResponse">

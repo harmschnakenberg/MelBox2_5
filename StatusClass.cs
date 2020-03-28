@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -10,10 +12,45 @@ namespace MelBox2_5
 {
     class StatusClass
     {
+        public StatusClass()
+        {
+            InBox.CollectionChanged += (sender, e) =>
+            {
+                if (e.Action == NotifyCollectionChangedAction.Add)
+                {
+                    InMsgsSinceStartup++;
+
+                    for (int i = 0; i < InBox.Count; i++)
+                    {
+                        Sql Sql = new Sql();
+                        if (Sql.CreateMessageEntry(InBox[i]))
+                        {
+                            OutBox.Add(InBox[i]);
+                            InBox.RemoveAt(i);                            
+                        }
+                    }
+
+                }
+            };
+
+            OutBox.CollectionChanged += (sender, e) =>
+            {
+                if (e.Action == NotifyCollectionChangedAction.Add)
+                {
+                    OutMsgsSinceStartup++;
+                }
+            };
+        }
+    
         private static double _GsmSignalQuality = 0;
         private static int _ErrorCount = 0;
         private static int _WarningCount = 0;
         private static uint _MessagesInDb = 0;
+        private static uint _InMsgsSinceStartup = 0;
+        private static uint _OutMsgsSinceStartup = 0;
+
+        private static readonly ObservableCollection<Message> _InBox = new ObservableCollection<Message>();
+        private static readonly ObservableCollection<Message> _OutBox = new ObservableCollection<Message>();
 
         public static double GsmSignalQuality
         {
@@ -54,9 +91,42 @@ namespace MelBox2_5
             }
         }
 
-        #region Events
+        public static uint InMsgsSinceStartup
+        {
+            get => _InMsgsSinceStartup;
+            set
+            {
+                _InMsgsSinceStartup = value;
+                NotifyStaticPropertyChanged();
+            }
+        }
 
-        public static event EventHandler<PropertyChangedEventArgs> StaticPropertyChanged;
+        public static uint OutMsgsSinceStartup
+        {
+            get => _OutMsgsSinceStartup;
+            set
+            {
+                _OutMsgsSinceStartup = value;
+                NotifyStaticPropertyChanged();
+            }
+        }
+
+        public static ObservableCollection<Message> OutBox
+        {
+            get => _OutBox;
+        }
+
+
+        public static ObservableCollection<Message> InBox
+        { 
+            get => _InBox;
+        }
+  
+
+
+    #region Events
+
+    public static event EventHandler<PropertyChangedEventArgs> StaticPropertyChanged;
 
         private static void NotifyStaticPropertyChanged([CallerMemberName] string propertyName = null)
         {

@@ -337,5 +337,106 @@ namespace MelBox2_5
 
         #endregion
 
+
+        #region SQL Nachrichten
+
+        internal uint CountMessagesInDb()
+        {
+            const string query = "SELECT COUNT(ID) FROM MessageLog";
+
+            DataTable result = ExecuteRead(query, null);
+
+            return uint.Parse(result.Rows[0][0].ToString());
+
+        }
+
+
+        /// <summary>
+        /// Speichert eine neue Meldung in die Datenbank.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns>true: erfolgreich bearbeitet oder Duplikat verworfen</returns>
+        public bool CreateMessageEntry(Message message)
+        {
+            if (message.Content.Length < 2) message.Content = "- KEIN TEXT -";
+
+            #region Ermittelt die ID des Nachrichteninhalts
+            uint contendId = message.ContentId;
+
+            if (contendId == 0)
+            {
+
+                const string contentQuery = "SELECT ID FROM MessageContent WHERE Content = @Content";
+
+                var args1 = new Dictionary<string, object>
+                {
+                    {"@Content", message.Content }
+                };
+
+                DataTable dt1 = ExecuteRead(contentQuery, args1);
+
+                if (dt1.Rows.Count > 0)
+                {
+                    //Eintrag vorhanden
+                    uint.TryParse(dt1.Rows[0][0].ToString(), out contendId);
+                }
+                else
+                {
+                    //Eintrag neu erstellen
+                    const string doubleQuery = "INSERT INTO MessageContent (Content) VALUES (@Content); " +
+                                                        "SELECT ID FROM MessageContent ORDER BY ID DESC LIMIT 1";
+
+                    dt1 = ExecuteRead(doubleQuery, args1);
+
+                    uint.TryParse(dt1.Rows[0][0].ToString(), out contendId);
+                }
+
+                message.ContentId = contendId;
+
+            }
+
+            #endregion
+
+            #region ist genau dieser Eintrag schon vorhanden?
+            const string checkQuery = "SELECT ID, @Type FROM MessageLog WHERE RecieveTime = @RecieveTime AND FromPersonID = @FromPersonID AND ContentID = @ContentID";
+
+            var args2 = new Dictionary<string, object>
+                {
+                    {"@RecieveTime", message.RecieveTime },
+                    {"@FromPersonID", message.From.Id},
+                    {"@Type", (ushort)message.Status},
+                    {"@ContentID", contendId }
+                };
+
+            DataTable dt2 = ExecuteRead(checkQuery, args2);
+            //Ist der Eintrag schon einmal vorhanden?
+            if (dt2.Rows.Count > 0)
+            {
+                MainWindow.Log(MainWindow.Topic.Internal, MainWindow.Prio.Info, 2003282143,
+                    "Die Nachricht mit der ID [" + dt2.Rows[0][0].ToString() + "] ist bereits in der Datenbank vorhanden.");
+                return true;
+            }
+
+            #endregion
+
+            #region schreibe in die Datenbank
+            const string writeQuery = "INSERT INTO MessageLog (RecieveTime, FromPersonID, Type, ContentID) VALUES (@RecieveTime, @FromPersonID, @Type, @ContentID)";
+
+            //Wurde kein neuer Eintrag erzeugt?
+            if (ExecuteWrite(writeQuery, args2) == 0)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+
+            #endregion
+        }
+
+
+        #endregion
+
     }
 }

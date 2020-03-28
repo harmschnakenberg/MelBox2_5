@@ -84,7 +84,6 @@ namespace MelBox2_5
         public ushort MaxInactiveHours { get; set; }
     }
 
-
     public class Company
     {
         public uint Id { get; set; }
@@ -98,4 +97,30 @@ namespace MelBox2_5
         public string City { get; set; }
     }
 
+    public class Message
+    {
+        public uint Id { get; set; }
+
+        //Inhalt
+        public string Subject { get; set; }
+
+        public string Content { get; set; }
+
+        public uint ContentId { get; set; }
+
+        //Von
+        public Contact From { get; set; }
+
+        public DateTime RecieveTime { get; set; }
+
+        //An
+        public List<Contact> To { get; set; }
+
+        public DateTime SentTime { get; set; }
+
+        public int SendingApproches { get; set; }
+
+        //Weg der Nachricht
+        public MessageType Status { get; set; }
+    }
 }

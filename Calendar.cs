@@ -9,11 +9,11 @@ namespace MelBox2_5
 {
     public partial class MainWindow : Window
     {
-        public static int ShiftStartHour { get; set; } = int.Parse(Properties.Resources.ShiftStartHour);
+        public static int ShiftStartHour { get; set; } = Properties.Settings.Default.ShiftStartHour;
 
-        public static int ShiftStartHourFriday { get; set; } = int.Parse(Properties.Resources.ShiftStartHourFriday);
+        public static int ShiftStartHourFriday { get; set; } = Properties.Settings.Default.ShiftStartHourFriday;
 
-        public static int ShiftEndHour { get; set; } = int.Parse(Properties.Resources.ShiftEndHour);
+        public static int ShiftEndHour { get; set; } = Properties.Settings.Default.ShiftEndHour;
 
         // Aus VB konvertiert
         private static DateTime DateOsterSonntag(DateTime pDate)

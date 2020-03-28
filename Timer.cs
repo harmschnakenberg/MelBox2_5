@@ -10,7 +10,7 @@ namespace MelBox2_5
 {
     public partial class MainWindow : Window
     {
-       // private const int SignalQualityCheckTimerIntervalMinutes = 5;
+        private readonly int SignalQualityCheckTimerIntervalSeconds = Properties.Settings.Default.SignalQualityCheckTimerIntervalSeconds;
 
         DispatcherTimer _SignalQualityCheckTimer;
 
@@ -19,8 +19,8 @@ namespace MelBox2_5
             _SignalQualityCheckTimer = new DispatcherTimer();
 
             //Signalqualität prüfen
-            _SignalQualityCheckTimer.Tick += GetGsmSignalQuality;
-            _SignalQualityCheckTimer.Interval = new TimeSpan(0, 0, 0, 5);
+            _SignalQualityCheckTimer.Tick += CheckGsmSignalQuality;
+            _SignalQualityCheckTimer.Interval = new TimeSpan(0, 0, 0, SignalQualityCheckTimerIntervalSeconds);
             _SignalQualityCheckTimer.Start();
         }
     }

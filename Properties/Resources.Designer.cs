@@ -61,33 +61,6 @@ namespace MelBox2_5.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die 9600 ähnelt.
-        /// </summary>
-        internal static string BaudRate {
-            get {
-                return ResourceManager.GetString("BaudRate", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die COM6 ähnelt.
-        /// </summary>
-        internal static string ComPort {
-            get {
-                return ResourceManager.GetString("ComPort", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die 8 ähnelt.
-        /// </summary>
-        internal static string DataBits {
-            get {
-                return ResourceManager.GetString("DataBits", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap inbox {
@@ -108,15 +81,6 @@ namespace MelBox2_5.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die None ähnelt.
-        /// </summary>
-        internal static string Parity {
-            get {
-                return ResourceManager.GetString("Parity", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap server {
@@ -127,48 +91,12 @@ namespace MelBox2_5.Properties {
         }
         
         /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die 7 ähnelt.
-        /// </summary>
-        internal static string ShiftEndHour {
-            get {
-                return ResourceManager.GetString("ShiftEndHour", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die 17 ähnelt.
-        /// </summary>
-        internal static string ShiftStartHour {
-            get {
-                return ResourceManager.GetString("ShiftStartHour", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die 15 ähnelt.
-        /// </summary>
-        internal static string ShiftStartHourFriday {
-            get {
-                return ResourceManager.GetString("ShiftStartHourFriday", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap signal {
             get {
                 object obj = ResourceManager.GetObject("signal", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Sucht eine lokalisierte Zeichenfolge, die 1 ähnelt.
-        /// </summary>
-        internal static string StopBits {
-            get {
-                return ResourceManager.GetString("StopBits", resourceCulture);
             }
         }
         

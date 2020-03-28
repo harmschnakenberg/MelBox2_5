@@ -22,7 +22,7 @@ namespace MelBox2_5
             SpManager = new SerialPortManager();
 
             SpManager.NewSerialDataRecieved += new EventHandler<SerialDataEventArgs>(GsmTrafficLogger);
-            //SpManager.NewSerialDataRecieved += new EventHandler<SerialDataEventArgs>(CheckForIncomingSms);
+            SpManager.NewSerialDataRecieved += new EventHandler<SerialDataEventArgs>(CheckForIncomingSms);
         }
 
         /// <summary>
@@ -54,6 +54,10 @@ namespace MelBox2_5
                     // MessageBox.Show("2003110953 Port >" + port.PortName + "< ist nicht offen. Versuche zu öffnen");
                     SpManager.SerialPort.Open();
                     System.Threading.Thread.Sleep(500);
+                    if (!port.IsOpen)
+                    {
+                        Log(Topic.COM, Prio.Fehler, 2003281958, "Der COM-Port " + port.PortName + " konnte nicht geöffnet werden.");
+                    }
                 }
 
                 port.DiscardOutBuffer();
@@ -75,15 +79,15 @@ namespace MelBox2_5
 
     public class SerialSettings
     {
-        public static string PortName => SerialPort.GetPortNames().Contains(Properties.Resources.ComPort) ? Properties.Resources.ComPort : SerialPort.GetPortNames().LastOrDefault();
+        public static string PortName => SerialPort.GetPortNames().Contains(Properties.Settings.Default.PortName) ? Properties.Settings.Default.PortName : SerialPort.GetPortNames().LastOrDefault();
 
-        public static int BaudRate => int.Parse(Properties.Resources.BaudRate);
+        public static int BaudRate => Properties.Settings.Default.BaudRate;
 
-        public static Parity Parity => (Parity)Enum.Parse(typeof(Parity), Properties.Resources.Parity);
+        public static Parity Parity => (Parity)Enum.Parse(typeof(Parity), Properties.Settings.Default.Parity);
      
-        public static int DataBits => int.Parse(Properties.Resources.DataBits);
+        public static int DataBits => Properties.Settings.Default.DataBits;
 
-        public static StopBits StopBits => (StopBits) Enum.Parse(typeof(StopBits), Properties.Resources.StopBits);      
+        public static StopBits StopBits => (StopBits)Properties.Settings.Default.StopBits;      
     }
 
     public class SerialPortManager : IDisposable

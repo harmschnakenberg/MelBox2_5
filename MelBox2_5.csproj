@@ -82,6 +82,7 @@
     <Compile Include="GsmEventHandler.cs" />
     <Compile Include="HelperClass.cs" />
     <Compile Include="Log.cs" />
+    <Compile Include="Messages.cs" />
     <Compile Include="SerialPort.cs" />
     <Compile Include="Sql.cs" />
     <Compile Include="StatusClass.cs" />
