@@ -402,7 +402,7 @@ namespace MelBox2_5
 
             var args2 = new Dictionary<string, object>
                 {
-                    {"@RecieveTime", message.RecieveTime },
+                    {"@RecieveTime", ((DateTimeOffset)message.RecieveTime).ToUnixTimeSeconds()},
                     {"@FromPersonID", message.From.Id},
                     {"@Type", (ushort)message.Status},
                     {"@ContentID", contendId }

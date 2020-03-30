@@ -110,8 +110,8 @@ namespace MelBox2_5
                     StatusClass.GsmSignalQuality = signalQuality;
 
                     //Wenn signalQuality < 10 Nachricht an Admin
-                    //if (signalQuality < 10)
-                    //  Messages.Create_SignalQualityMessage(signalQuality);
+                    if (signalQuality < 10)
+                        Messages.Create_SignalQualityMessage(signalQuality);
                 }
                 finally
                 {

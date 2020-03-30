@@ -44,6 +44,7 @@ namespace MelBox2_5
             {
                 Content = body.ToString(),
                 From = Contacts.SmsCenter,
+                RecieveTime = DateTime.UtcNow,
                 Status = MessageType.System,
                 Subject = "MelBox2 - Signalqualität " + signalStrength,
                 To = new List<Contact>() { Contacts.MelBox2Admin }
