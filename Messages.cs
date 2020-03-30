@@ -53,24 +53,48 @@ namespace MelBox2_5
             StatusClass.InBox.Add(notification);
         }
 
-        internal static void Create_NewUnknownContactMessage(Message recievedMessage, uint newContactId, string keyWord)
-        {
-            if (recievedMessage is null)
-            {
-                throw new ArgumentNullException(nameof(recievedMessage));
-            }
+        //internal static void Create_NewUnknownContactMessage(Message recievedMessage, uint newContactId, string keyWord)
+        //{
+        //    if (recievedMessage is null)
+        //    {
+        //        throw new ArgumentNullException(nameof(recievedMessage));
+        //    }
 
+        //    StringBuilder body = new StringBuilder();
+        //    body.Append("Es wurde ein neuer Absender in die Datenbank von MelBox2 eingetragen.\r\n\r\n");
+        //    body.Append("Neue Nachricht empfangen am " + recievedMessage.SentTime.ToShortDateString() + " um " + recievedMessage.SentTime.ToLongTimeString() + "\r\n\r\n");
+
+        //    body.Append("Benutzerschlüsselwort ist\t\t>" + keyWord + "<\r\n");
+        //    body.Append("Empfangene Emailadresse war\t\t>" + recievedMessage.From.Email + "<\r\n");
+        //    body.Append("Empfangene Telefonnummer war\t>+" + recievedMessage.From.Phone + "<\r\n\r\n");
+
+        //    body.Append("Empfangenen Nachricht war [" + recievedMessage.ContentId + "]\t\t>" + recievedMessage.Content + "<\r\n\r\n");
+
+        //    body.Append("Bitte die Absenderdaten in MelBox2 im Reiter >Stammdaten< für die ID [" + newContactId + "] vervollständigen .\r\n");
+        //    body.Append("Dies ist eine automatische Nachricht von MelBox2.");
+
+        //    Message notification = new Message
+        //    {
+        //        Content = body.ToString(),
+        //        From = Contacts.SmsCenter,
+        //        Status = MessageType.System,
+        //        Subject = "MelBox2 - neuer Absender",
+        //        To = new List<Contact>() { Contacts.MelBox2Admin }
+        //    };
+
+        //    StatusClass.InBox.Add(notification);
+        //}
+
+        internal static void Create_NewUnknownContactMessage(uint contactId, string email, ulong phone, string keyWord)
+        {            
             StringBuilder body = new StringBuilder();
             body.Append("Es wurde ein neuer Absender in die Datenbank von MelBox2 eingetragen.\r\n\r\n");
-            body.Append("Neue Nachricht empfangen am " + recievedMessage.SentTime.ToShortDateString() + " um " + recievedMessage.SentTime.ToLongTimeString() + "\r\n\r\n");
-
+            
             body.Append("Benutzerschlüsselwort ist\t\t>" + keyWord + "<\r\n");
-            body.Append("Empfangene Emailadresse war\t\t>" + recievedMessage.From.Email + "<\r\n");
-            body.Append("Empfangene Telefonnummer war\t>+" + recievedMessage.From.Phone + "<\r\n\r\n");
+            body.Append("Empfangene Emailadresse war\t\t>" + email + "<\r\n");
+            body.Append("Empfangene Telefonnummer war\t>+" + phone + "<\r\n\r\n");
 
-            body.Append("Empfangenen Nachricht war [" + recievedMessage.ContentId + "]\t\t>" + recievedMessage.Content + "<\r\n\r\n");
-
-            body.Append("Bitte die Absenderdaten in MelBox2 im Reiter >Stammdaten< für die ID [" + newContactId + "] vervollständigen .\r\n");
+            body.Append("Bitte die Absenderdaten in MelBox2 im Reiter >Stammdaten< für die ID [" + contactId + "] vervollständigen .\r\n");
             body.Append("Dies ist eine automatische Nachricht von MelBox2.");
 
             Message notification = new Message

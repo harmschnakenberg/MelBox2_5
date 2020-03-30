@@ -124,102 +124,137 @@ namespace MelBox2_5
         #endregion
 
         #region SMS Empfangen
-
-        void CheckForIncomingSms(object sender, SerialDataEventArgs e)
+        void SubscribeForIncomingSms()
         {
-            string str = Encoding.ASCII.GetString(e.Data);
+            //MessageBox.Show("Abboniere SMS-Benachrichtigungen.");
 
-            //Empfangshinweis für eingehende Nachricht ?
-            if (str.Contains("+CMTI:"))
-            {
-                string smsIdStr = System.Text.RegularExpressions.Regex.Match(str, @"\d+").Value;
+            //Setzte Textmodus in GSM-Modem
+            PortComandExe("AT+CMGF=1");
+            System.Threading.Thread.Sleep(300);
 
-                if (int.TryParse(smsIdStr, out int smsId))
-                {
-                    //PortComandExe("AT+CMGF=1");
+            //Setzte Speicherbereich im GSM-Modem "SM" SIM, "PM" Phone-Memory, "MT" + "SM" + "PM"
+            PortComandExe("AT+CPMS=\"MT\"");
+            System.Threading.Thread.Sleep(300);
 
-                    PortComandExe("AT+CMGR=" + smsId);
-                    MessageBox.Show(smsId.ToString());
-                    //TODO: Eingegangene SMS in Datenbank schreiben
+            //TODO: funktioniert nur sporadisch - warum?
+            //Aktiviere Benachrichtigung von GSM-Modem, wenn neue SMS ankommt
 
-                    SpManager.NewSerialDataRecieved += ReadIncomingMessage;                    
-                    PortComandExe("AT+CMGR=" + smsId);
-                }
-                else
-                {
-                    Log(Topic.SMS, Prio.Fehler, 2003221714, "Die ID der eingegangenen SMS konnte nicht ausgelesen werden aus >" + str + "< ");
-                }
+            PortComandExe("AT+CNMI=?");
+            System.Threading.Thread.Sleep(300);
 
-            }
+
+            PortComandExe("AT+CNMI=2,1,2,0,1");
+            System.Threading.Thread.Sleep(300);
         }
 
-        void ReadIncomingMessage(object sender, SerialDataEventArgs e)
+        void CheckForIncomingSmsIndication(object sender, SerialDataEventArgs e)
+        {
+            Task.Run(() =>
+            {
+                string str = Encoding.ASCII.GetString(e.Data);
+
+                    //Empfangshinweis für eingehende Nachricht ?
+                    if (str.Contains("+CMTI:"))
+                {
+                    string smsIdStr = System.Text.RegularExpressions.Regex.Match(str, @"\d+").Value;
+
+                    if (int.TryParse(smsIdStr, out int smsId))
+                    {
+                        PortComandExe("AT+CMGF=1");
+                        System.Threading.Thread.Sleep(300);
+
+                        PortComandExe("AT+CPMS=\"MT\"");
+                        System.Threading.Thread.Sleep(300);
+
+                        SpManager.NewSerialDataRecieved += ReadIncomingMessagePart1;
+                        PortComandExe("AT+CMGR=" + smsId);
+                        System.Threading.Thread.Sleep(300);
+                    }
+                    else
+                    {
+                        Log(Topic.SMS, Prio.Fehler, 2003221714, "Die ID der eingegangenen SMS konnte nicht ausgelesen werden aus >" + str + "< ");
+                    }
+
+                }
+            });
+        }
+
+        bool WaitForSmsContent = false;
+
+        Message IncomingMessage;
+
+        void ReadIncomingMessagePart1(object sender, SerialDataEventArgs e)
         {
             string str = Encoding.ASCII.GetString(e.Data);
 
             //Empfange Nachricht ?
             if (str.Contains("+CMGR:"))
             {
-                PortComandExe("AT+CMGF=1");
-                //TODO: SMS decodieren, in DB und dann in Sendeliste schreiben
+                //+CMGR: "REC READ","+4915142265412",,"20/03/30,13:44:56+08"\r\n
+                string[] smsHeader = str.Remove(0, 7).Replace("\"", string.Empty).Replace("\r\n", string.Empty).Split(',');
 
-                //System.Text.RegularExpressions.Regex r = new System.Text.RegularExpressions.Regex("\\+CMGL: (\\d+),\"(.+)\",\"(.+)\",(.*),\"(.+)\"\\r\\n(.+)"); // "\\+CMGL: (\\d+),\"(.+)\",\"(.+)\",(.*),\"(.+)\"\n(.+)\n\n\""
-                //System.Text.RegularExpressions.Match m = r.Match(input);
+                Contact contact = Sql.GetContactFromDb(0, "", "", smsHeader[1], "");
 
-                //while (m.Success)
-                //{
-                //    //string gr0 = m.Groups[0].Value; // <alles>
-                //    string gr1 = m.Groups[1].Value; //6
-                //    string gr2 = m.Groups[2].Value; //STO SENT
-                //    string gr3 = m.Groups[3].Value; //+49123456789
-                //                                    //string gr4 = m.Groups[4].Value; // -LEER-
-                //    string gr5 = m.Groups[5].Value.Replace(',', ' '); //18/09/28,11:05:51 + 105
-                //    string gr6 = m.Groups[6].Value; //Nachricht
-                //    string gr7 = m.Groups[7].Value; //Nachricht (notwendig?)
+                IncomingMessage = new Message()
+                {
+                    From = contact,
+                    RecieveTime = DateTime.Parse(smsHeader[3]),
+                    Status = MessageType.RecievedFromSms
+                };
 
-                //    //MessageBox.Show(string.Format("0:{0}\r\n1:{1}\r\n2:{2}\r\n3:{3}\r\n4:{4}\r\n5:{5}\r\n6:{6}\r\n7:{7}\r\n", gr0, gr1, gr2, gr3, gr4, gr5, gr6, gr7), "Rohdaten");
-
-                //    int.TryParse(gr1, out int smsId);
-                //    DateTime.TryParse(gr5, out DateTime time);
-
-                //    //MessageBox.Show("Zeit interpretiert: " + time.ToString("dd.MM.yyyy HH:mm:ss"));
-
-                //    //Message Status zu MessageType
-                //    MessageType type;
-                //    switch (gr2)
-                //    {
-                //        case "REC UNREAD":
-                //        case "REC READ":
-                //            type = MessageType.RecievedFromSms;
-                //            break;
-                //        case "STO SENT":
-                //            type = MessageType.SentToSms;
-                //            break;
-                //        default:
-                //            type = MessageType.RecievedFromSms;
-                //            break;
-                //    }
-
-                //    //Nachricht erstellen
-                //    Message msg = new Message
-                //    {
-                //        Index = smsId,
-                //        Status = gr2,
-                //        //Alphabet -leer-
-                //        Type = (ushort)type,
-                //        Cellphone = HelperClass.ConvertStringToPhonenumber(gr3),
-                //        SentTime = Sql.ConvertToUnixTime(time),
-                //        CustomerKeyWord = GetKeyWords(gr6),
-                //        Content = gr6 + gr7
-                //    };
-
-                //    messages.Add(msg);
-
-                //    m = m.NextMatch();
-                //}
-
-                SpManager.NewSerialDataRecieved -= ReadIncomingMessage;
+                WaitForSmsContent = true;
             }
+
+            if (WaitForSmsContent)
+            {
+                MessageBox.Show(str);
+
+                //Nachrichteninhalt?
+                if (!str.StartsWith("AT+") && !str.StartsWith("+") && !str.StartsWith("OK") && str.Contains("\r\n\r\n"))
+                {
+                    IncomingMessage.Content = str.Replace("\r\n", string.Empty);
+                    //TODO: Eingegangene SMS in Datenbank schreiben
+
+                    Sql.CreateMessageEntry(IncomingMessage);
+
+                    IncomingMessage = null;
+                    WaitForSmsContent = false;
+                    SpManager.NewSerialDataRecieved -= ReadIncomingMessagePart1;
+                }
+            }
+        }
+
+        #endregion
+
+        #region SMS-Aktion
+        private void Gsm_Button_SendTestSms_Click(object sender, RoutedEventArgs e)
+        {
+            ulong phone = HelperClass.ConvertStringToPhonenumber(Gsm_TextBox_TestSmsNumber_Reciever.Text);
+            string content = Gsm_TextBox_TestSmsText.Text;
+            const string ctrlz = "\u001a";
+
+            if (phone == 0)
+            {
+                MessageBox.Show("Die Telefonnummer >" + Gsm_TextBox_TestSmsNumber_Reciever.Text + "< ist ungültig!", "MelBox2", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return;
+            }
+
+            if (content.Length < 5)
+            {
+                MessageBox.Show("SMS-Nachrichten müssen mindestens 5 Zeichen enthalten!", "MelBox2", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return;
+            }
+
+            PortComandExe("AT+CMGF=1");
+            System.Threading.Thread.Sleep(500);
+
+            PortComandExe("AT+CMGS=\"+" + phone + "\"\r" + content + ctrlz);
+
+        }
+
+        private void Gsm_Button_SubscribeWaitForSms_Click(object sender, RoutedEventArgs e)
+        {
+            SubscribeForIncomingSms();
         }
 
         #endregion

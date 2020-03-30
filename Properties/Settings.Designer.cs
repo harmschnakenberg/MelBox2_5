@@ -34,7 +34,7 @@ namespace MelBox2_5.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("9600")]
+        [global::System.Configuration.DefaultSettingValueAttribute("38400")]
         public int BaudRate {
             get {
                 return ((int)(this["BaudRate"]));

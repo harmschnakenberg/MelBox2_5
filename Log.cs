@@ -45,6 +45,12 @@ namespace MelBox2_5
             Sql.CreateLogEntry(topic, prio, contentId, content);
         }
 
+        private void Log_TabItem_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+
+            Sql.ShowLastLofEntries();
+        }
+
     }
 
 }

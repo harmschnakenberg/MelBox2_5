@@ -8,6 +8,19 @@ namespace MelBox2_5
 {
     class HelperClass
     {
+        internal static string GetKeyWords(string MessageContent)
+        {
+
+            char[] split = new char[] { ' ', ',', '-', '.', ':', ';' };
+            string[] words = MessageContent.Split(split);
+
+            string KeyWords = words[0].Trim();
+
+            if (words.Length > 1) KeyWords += words[1].Trim();
+
+            return KeyWords;
+        }
+
         internal static bool IsValidEmailAddress(string mailAddress)
         {
             System.Text.RegularExpressions.Regex mailIDPattern = new System.Text.RegularExpressions.Regex(@"[\w-]+@([\w-]+\.)+[\w-]+");

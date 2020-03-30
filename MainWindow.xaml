@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:MelBox2_5"
         xmlns:Properties="clr-namespace:MelBox2_5.Properties" x:Class="MelBox2_5.MainWindow"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Closing="Window_Closing">
+        Title="MainWindow" Height="768" Width="1024" Closing="Window_Closing">
 
     <Window.Resources>
         <local:ProgressForegroundConverter x:Key="ProgressForegroundConverter" />
@@ -14,6 +14,98 @@
 
     <Grid>
         <TabControl>
+            <TabItem Header="Ticker">
+                <ScrollViewer>
+                    <DataGrid x:Name="Ticker_DataGrid_LastMessages"  ItemsSource="{Binding LastMessages}" CanUserAddRows="False" AutoGenerateColumns="False" FontSize="11" >
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="ID">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate >
+                                        <TextBlock Text="{Binding Path=ID,  UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Empfangen" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path=Empfangen,  UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="SMS">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsEnabled="False" IsChecked="{Binding Path=von_SMS,  UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Email">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsEnabled="False" IsChecked="{Binding Path=von_Email,  UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="von" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path=von,  UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Inhalt" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path=Inhalt,  UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text=">" HorizontalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Gesendet" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path=Gesendet,  UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="SMS">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsEnabled="False" IsChecked="{Binding Path=an_SMS,  UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Email">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsEnabled="False" IsChecked="{Binding Path=an_Email,  UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="An" >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Path=An,  UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Gesperrt">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsEnabled="False" IsChecked="{Binding Path=Gesperrt, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" x:Name="Timer_CheckBox_BlockMessage" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </ScrollViewer>
+            </TabItem>
             <TabItem Header="Modem">
                 <DockPanel x:Name="Status_DockPanel">
                     <StatusBar DockPanel.Dock="Bottom">
@@ -115,7 +207,14 @@
 
 
                     <GroupBox Header="Aktionen" DockPanel.Dock="Right" >
-                        
+                        <StackPanel>
+                            <TextBlock>Sende SMS an:</TextBlock>
+                            <TextBox x:Name="Gsm_TextBox_TestSmsNumber_Reciever" />
+                            <TextBlock>Nachricht:</TextBlock>
+                            <TextBox x:Name="Gsm_TextBox_TestSmsText" Height="100" />
+                            <Button Content="Sende Test-SMS" x:Name="Gsm_Button_SendTestSms" Click="Gsm_Button_SendTestSms_Click"/>
+                            <Button Content="Warte auf SMS" Margin="0,10" x:Name="Gsm_Button_SubscribeWaitForSms" Click="Gsm_Button_SubscribeWaitForSms_Click" />
+                        </StackPanel>
                     </GroupBox>
 
                     <GroupBox Header="Verlauf">
@@ -125,7 +224,13 @@
                     </GroupBox>
                 </DockPanel>
             </TabItem>
-
+            <TabItem Header="Log" x:Name="Log_TabItem" PreviewMouseDown="Log_TabItem_PreviewMouseDown" >
+                <ScrollViewer>
+                    <DataGrid x:Name="Log_DataGrid_LastLogentries" ItemsSource="{Binding LastLogEntries}">
+                        
+                    </DataGrid>
+                </ScrollViewer>
+            </TabItem>
 
         </TabControl>
     </Grid>

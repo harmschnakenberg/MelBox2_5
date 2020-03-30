@@ -22,7 +22,7 @@ namespace MelBox2_5
             SpManager = new SerialPortManager();
 
             SpManager.NewSerialDataRecieved += new EventHandler<SerialDataEventArgs>(GsmTrafficLogger);
-            SpManager.NewSerialDataRecieved += new EventHandler<SerialDataEventArgs>(CheckForIncomingSms);
+            SpManager.NewSerialDataRecieved += new EventHandler<SerialDataEventArgs>(CheckForIncomingSmsIndication);
         }
 
         /// <summary>
@@ -31,11 +31,12 @@ namespace MelBox2_5
         /// <param name="command"></param>
         private void PortComandExe(string command)
         {
+
             System.IO.Ports.SerialPort port = SpManager.SerialPort;
             //Port bereit?
             if (port == null)
             {
-                //MessageBox.Show("2003111425 serieller Port ist unbestimmt. Befehl an GSM-Modem wird abgebrochen.");
+                //MessageBox.Show("2003111425 serieller Port ist unbestimmt. Befehl an GSM-Modem wird abgerochen.");
                 Log(Topic.COM, Prio.Fehler, 2003111550, "Der serielle Port ist unbestimmt. Befehl an GSM-Modem wird abgebrochen.");
                 return;
             }
@@ -68,9 +69,12 @@ namespace MelBox2_5
             }
             catch (System.IO.IOException ex_io)
             { 
-                //MessageBox.Show("2003110956 Konnte Befehl nicht an COM-Port senden.\r\n" + ex_io.Message);
                 Log(Topic.COM, Prio.Fehler, 2003110956, "Konnte Befehl nicht an COM-Port senden: " + ex_io.Message);
-                return;
+            }
+            catch (UnauthorizedAccessException ex_unaut)
+            {
+                string msg = "Der Zugriff auf >" + SerialSettings.PortName + "< wurde verweigert. " + ex_unaut.Message;                
+                MainWindow.Log(MainWindow.Topic.COM, MainWindow.Prio.Fehler, 2003301654, msg);
             }
 
         }
@@ -153,6 +157,12 @@ namespace MelBox2_5
                 string msg = "Die COM-Port-Einstellungen für >" + SerialSettings.PortName + "< sind fehlerhaft. Config-Datei prüfen. " + ex_arg.Message;
                 //MessageBox.Show(msg, "ACHTUNG", MessageBoxButton.OK, MessageBoxImage.Error);
                 MainWindow.Log(MainWindow.Topic.COM, MainWindow.Prio.Fehler, 2003262224, msg);
+            }
+            catch (UnauthorizedAccessException ex_unaut)
+            {
+                string msg = "Der Zugriff auf >" + SerialSettings.PortName + "< wurde verweigert. " + ex_unaut.Message;
+                //MessageBox.Show(msg, "ACHTUNG", MessageBoxButton.OK, MessageBoxImage.Error);
+                MainWindow.Log(MainWindow.Topic.COM, MainWindow.Prio.Fehler, 2003301654, msg);
             }
             catch (System.IO.IOException ex_io)
             {

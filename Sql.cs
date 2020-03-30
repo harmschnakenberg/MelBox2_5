@@ -87,10 +87,10 @@ namespace MelBox2_5
 
                         "INSERT INTO \"MessageContent\" (\"Content\") VALUES ('Datenbank neu erstellt.');",
 
-                        "CREATE TABLE \"MessageLog\"( \"ID\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"RecieveTime\" INTEGER NOT NULL, \"FromPersonID\" INTEGER NOT NULL, " +
-                        " \"SendTime\" INTEGER, \"ToPersonIDs\" TEXT, \"Type\" INTEGER NOT NULL, \"ContentID\" INTEGER NOT NULL);",
+                        "CREATE TABLE \"MessageLog\"( \"ID\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"RecieveTime\" INTEGER NOT NULL, \"FromContactID\" INTEGER NOT NULL, " +
+                        " \"SendTime\" INTEGER, \"ToContactIDs\" TEXT, \"Type\" INTEGER NOT NULL, \"ContentID\" INTEGER NOT NULL);",
 
-                        "INSERT INTO \"MessageLog\" (\"RecieveTime\", \"FromPersonID\", \"Type\", \"ContentID\") VALUES " +
+                        "INSERT INTO \"MessageLog\" (\"RecieveTime\", \"FromContactID\", \"Type\", \"ContentID\") VALUES " +
                         "(" + DateTimeOffset.UtcNow.ToUnixTimeSeconds() + ",0,1,1);",
 
                         "CREATE TABLE \"Shifts\"( \"ID\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"EntryTime\" INTEGER NOT NULL, " +
@@ -205,6 +205,17 @@ namespace MelBox2_5
             return numberOfRowsAffected;
         }
 
+        internal uint GetLastId(string tableName, string where = "1=1")
+        {
+            string query = "SELECT ID FROM \"" + tableName + "\" WHERE " + where + " ORDER BY ID DESC LIMIT 1";
+
+            DataTable dt = ExecuteRead(query, null);
+            string idString = dt.AsEnumerable().Select(x => x[0].ToString()).ToList().First();
+            uint.TryParse(idString, out uint lastId);
+
+            return lastId;
+        }
+
         #endregion
 
 
@@ -228,24 +239,66 @@ namespace MelBox2_5
             };
 
             ExecuteWrite(query, args);
+
+           // ShowLastLofEntries();
+        }
+
+        internal void ShowLastLofEntries()
+        {
+            const string query = "SELECT " +
+                "strftime('%d.%m.%Y %H:%M:%S', datetime(Time, 'unixepoch', 'localtime')) AS Zeit, " +
+                "Topic AS Bereich, " +
+                "Prio, " +
+                "Content AS Inhalt " +
+                "FROM Log ORDER BY Time DESC LIMIT 50";
+
+            StatusClass.LastLogEntries = ExecuteRead(query, null);
         }
 
         #endregion
 
         #region Contact
 
-        internal Contact GetContactFromDb(uint contactId)
+        /// <summary>
+        /// Liest einen Kontakt aus der DB anhand von einzelnen Identifaktoren. Erzeugt einen neuen Kontakt ind er DB wenn kein passender Kontakt gefunden wird.
+        /// </summary>
+        /// <param name="contactId"></param>
+        /// <param name="name"></param>
+        /// <param name="email"></param>
+        /// <param name="phoneStr"></param>
+        /// <param name="keyWord"></param>
+        /// <returns></returns>
+        internal Contact GetContactFromDb(uint contactId = 0, string name = "", string email = "", string phoneStr = "", string keyWord = "", string messageContent = "" )
         {
-            const string query = "SELECT Name, CompanyId, Email, Phone, KeyWord, SendWay FROM Contact WHERE ID = @Id";
+            const string query =    "SELECT Name, CompanyId, Email, Phone, KeyWord, SendWay " +
+                                    "FROM Contact " +
+                                    "WHERE ID = @Id " +
+                                    "OR ( length(Name) > 3 AND Name = @name ) " +
+                                    "OR ( Phone > 0 AND Phone = @phone ) " +
+                                    "OR ( length(KeyWord) > 2 AND KeyWord = @keyWord ) " +
+                                    "OR ( length(Email) > 5 AND Email = @email )";
+
+            ulong phone = HelperClass.ConvertStringToPhonenumber(phoneStr);
 
             var args = new Dictionary<string, object>
             {
-                {"@Id", contactId}
+                {"@Id", contactId},
+                {"@name", name},
+                {"@phone", phone},
+                {"@email", email},
+                {"@keyWord", keyWord}
             };
 
             DataTable result = ExecuteRead(query, args);
 
-            if (result.Rows.Count == 0) return null;
+            if (result.Rows.Count == 0)
+            {
+                if (name.Length < 3) name = Contacts.UnknownName;
+                if (!HelperClass.IsValidEmailAddress(email)) email = null;
+                if (keyWord.Length < 3 && messageContent.Length > 3) keyWord = HelperClass.GetKeyWords(messageContent);
+
+                contactId = CreateContact(name, email, phone, keyWord);
+            };
 
             Contact contact = new Contact
             {
@@ -259,6 +312,75 @@ namespace MelBox2_5
             };
 
             return contact;
+        }
+
+
+        private uint CreateContact(string name, string email, ulong phone, string messageContentOrKeyWord)
+        {
+            //Schreibe neuen Kontakt in DB
+            const string query = "INSERT INTO \"Contact\" (\"Time\", \"Name\", \"Email\", \"Phone\", \"KeyWord\", \"SendWay\" ) " +
+                                 "VALUES (@time, @name, @email, @phone, @keyWord, @sendWay)";
+
+            string validEmail = string.Empty;
+            if (HelperClass.IsValidEmailAddress(email)) validEmail = email;
+
+            string validKeyWord = HelperClass.GetKeyWords(messageContentOrKeyWord);
+
+            var args = new Dictionary<string, object>
+                {
+                    {"@Time", DateTimeOffset.UtcNow.ToUnixTimeSeconds() },
+                    {"@Name", name},
+                    {"@Phone", phone},
+                    {"@Email", validEmail},
+                    {"@KeyWord", validKeyWord}
+                };
+
+            if (ExecuteWrite(query, args) == 0)
+            {
+                MainWindow.Log(MainWindow.Topic.Contacts, MainWindow.Prio.Fehler, 2003301551, 
+                    string.Format("Fehler beim Anlegen eines neuen Kontakts mit der Kennung: >{0}<, >{1}<, >{2}<", name, phone, validEmail, validKeyWord));
+                return 0;
+            }
+            else
+            {
+                uint contactId = GetLastId("Contact");
+                Messages.Create_NewUnknownContactMessage(contactId, validEmail, phone, validKeyWord);
+                return contactId;
+            }
+
+            //# region Email-Benachrichtigung "neue unbekannte Telefonnummer / Emailadresse"
+            //Messages.Create_NewUnknownContactMessage()
+
+            //DateTime sentTime = DateTimeOffset.FromUnixTimeSeconds((long)message.SentTime).UtcDateTime;
+
+            //StringBuilder body = new StringBuilder();
+            //body.Append("Es wurde ein neuer Absender in die Datenbank von MelBox2 eingetragen.\r\n\r\n");
+            //body.Append("Neue Nachricht empfangen am " + sentTime.ToShortDateString() + " um " + sentTime.ToLongTimeString() + " UTC \r\n\r\n");
+
+            //body.Append("Benutzerschlüsselwort ist\t\t >" + message.CustomerKeyWord + "< \r\n");
+            //body.Append("Empfangene Emailadresse war\t\t >" + message.EMail + "< \r\n");
+            //body.Append("Empfangene Telefonnummer war\t >+" + message.Cellphone + "< \r\n\r\n");
+            //if (keyWord != null && keyWord.Length > 0)
+            //{
+            //    body.Append("Beginn der empfangenen Nachricht war\t>" + message.CustomerKeyWord + "...<\r\n");
+            //}
+            //else
+            //{
+            //    body.Append("Empfangenen Nachricht war\t\t>" + message.Content + "<\r\n");
+            //}
+
+            //body.Append("\r\nBitte die Absenderdaten in MelBox2 im Reiter >Stammdaten< vervollständigen .\r\nDies ist eine automatische Nachricht von MelBox2");
+
+            //KreuMessage msg = new KreuMessage
+            //{
+            //    Content = body.ToString()
+            //};
+
+            //MainWindow.PendingMessages.Add(msg, MainWindow.MelBoxAdminGroup);
+
+            //#endregion
+
+            //return GetLastId("Persons");
         }
 
         #endregion
@@ -350,6 +472,44 @@ namespace MelBox2_5
 
         }
 
+        internal void ShowLastMessages()
+        {
+            const string query = "SELECT MessageContent.ID, " +
+                "strftime('%d.%m.%Y %H:%M', datetime(RecieveTime, 'unixepoch', 'localtime')) AS Empfangen, " +
+                "(CASE WHEN Type & @TypeRecSms > 0 THEN 'true' ELSE 'false' END) AS von_SMS, " +
+                "(CASE WHEN Type & @TypeRecEmail > 0 THEN 'true' ELSE 'false' END) AS von_Email, " +
+                "Name AS von, " +
+                "strftime('%d.%m.%Y %H:%M', datetime(SendTime, 'unixepoch', 'localtime')) AS Gesendet, " +
+                "ToContactIDs, " +
+                "(SELECT group_concat(Name) FROM Contact WHERE Contact.ID " +
+                " IN( " +
+                "  WITH split(word, str) AS( " +
+                "     SELECT '', ToContactIDs || ',' FROM MessageLog WHERE ID = Msg.ID " +
+                "     UNION ALL SELECT " +
+                "     substr(str, 0, instr(str, ',')), " +
+                "    substr(str, instr(str, ',') + 1) " +
+                "   FROM split WHERE str != '' " +
+                "  ) SELECT word FROM split WHERE word != '' " +
+                " ) " +
+                ") AS An, " +
+                "(CASE WHEN(SELECT COUNT(ID) FROM BlockedMessages WHERE Msg.ContentID = BlockedMessages.ID) > 0 THEN 'true' ELSE 'false' END) AS Gesperrt, " +
+                "Content AS Inhalt " +
+                "FROM MessageLog AS Msg " +
+                "LEFT OUTER JOIN Contact ON Msg.FromContactID = Contact.ID " +
+                "LEFT JOIN BlockedMessages ON Msg.ContentID = BlockedMessages.ID " +
+                "LEFT JOIN MessageContent ON Msg.ContentID = MessageContent.ID " +
+                "ORDER BY RecieveTime DESC LIMIT 50";
+
+
+            var args = new Dictionary<string, object>
+                {
+                    {"@TypeRecSms", (int)MessageType.RecievedFromSms },
+                    {"@TypeRecEmail", (int)MessageType.RecievedFromEmail }
+                };
+
+            StatusClass.LastMessages = ExecuteRead(query, args);
+            //return ExecuteRead(query, null); 
+        }
 
         /// <summary>
         /// Speichert eine neue Meldung in die Datenbank.
@@ -398,12 +558,12 @@ namespace MelBox2_5
             #endregion
 
             #region ist genau dieser Eintrag schon vorhanden?
-            const string checkQuery = "SELECT ID, @Type FROM MessageLog WHERE RecieveTime = @RecieveTime AND FromPersonID = @FromPersonID AND ContentID = @ContentID";
+            const string checkQuery = "SELECT ID, @Type FROM MessageLog WHERE RecieveTime = @RecieveTime AND FromContactID = @FromContactID AND ContentID = @ContentID";
 
             var args2 = new Dictionary<string, object>
                 {
                     {"@RecieveTime", ((DateTimeOffset)message.RecieveTime).ToUnixTimeSeconds()},
-                    {"@FromPersonID", message.From.Id},
+                    {"@FromContactID", message.From.Id},
                     {"@Type", (ushort)message.Status},
                     {"@ContentID", contendId }
                 };
@@ -420,7 +580,7 @@ namespace MelBox2_5
             #endregion
 
             #region schreibe in die Datenbank
-            const string writeQuery = "INSERT INTO MessageLog (RecieveTime, FromPersonID, Type, ContentID) VALUES (@RecieveTime, @FromPersonID, @Type, @ContentID)";
+            const string writeQuery = "INSERT INTO MessageLog (RecieveTime, FromContactID, Type, ContentID) VALUES (@RecieveTime, @FromContactID, @Type, @ContentID)";
 
             //Wurde kein neuer Eintrag erzeugt?
             if (ExecuteWrite(writeQuery, args2) == 0)

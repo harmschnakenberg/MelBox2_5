@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Data;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -14,6 +15,8 @@ namespace MelBox2_5
     {
         public StatusClass()
         {
+            #region MessageCount
+
             InBox.CollectionChanged += (sender, e) =>
             {
                 if (e.Action == NotifyCollectionChangedAction.Add)
@@ -25,6 +28,7 @@ namespace MelBox2_5
                         Sql Sql = new Sql();
                         if (Sql.CreateMessageEntry(InBox[i]))
                         {
+                            Sql.ShowLastMessages();
                             OutBox.Add(InBox[i]);
                             InBox.RemoveAt(i);                            
                         }
@@ -41,7 +45,10 @@ namespace MelBox2_5
                 }
             };
         }
-    
+
+        #endregion
+
+        #region Fields
         private static double _GsmSignalQuality = 0;
         private static int _ErrorCount = 0;
         private static int _WarningCount = 0;
@@ -51,6 +58,31 @@ namespace MelBox2_5
 
         private static readonly ObservableCollection<Message> _InBox = new ObservableCollection<Message>();
         private static readonly ObservableCollection<Message> _OutBox = new ObservableCollection<Message>();
+
+        private static DataTable _LastMessages;
+        private static DataTable _LastLogEntries;
+        #endregion
+
+        #region Properties
+        public static DataTable LastMessages
+        {
+            get { return _LastMessages; }
+            set
+            {
+                _LastMessages = value;
+                NotifyStaticPropertyChanged();
+            }
+        }
+
+        public static DataTable LastLogEntries
+        {
+            get { return _LastLogEntries; }
+            set
+            {
+                _LastLogEntries = value;
+                NotifyStaticPropertyChanged();
+            }
+        }
 
         public static double GsmSignalQuality
         {
@@ -121,12 +153,12 @@ namespace MelBox2_5
         { 
             get => _InBox;
         }
-  
 
+        #endregion
 
-    #region Events
+        #region Events
 
-    public static event EventHandler<PropertyChangedEventArgs> StaticPropertyChanged;
+        public static event EventHandler<PropertyChangedEventArgs> StaticPropertyChanged;
 
         private static void NotifyStaticPropertyChanged([CallerMemberName] string propertyName = null)
         {
