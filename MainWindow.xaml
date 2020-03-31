@@ -166,12 +166,18 @@
                     </StatusBar>
 
                     <GroupBox Header="Signalstärke" DockPanel.Dock="Top" >
-                        <ProgressBar Grid.Column="3" ToolTip="Signalstärke GSM-Netz" 
+                        <StackPanel Orientation="Horizontal">
+                            <ProgressBar Grid.Column="3" ToolTip="Signalstärke GSM-Netz" 
                                  Maximum="31" 
-                                     Height="10"
+                                 Height="10"
+                                 MinWidth="600"
                                  x:Name="Gsm_ProgressBar_SignalQuality" 
                                  Foreground="{Binding RelativeSource={RelativeSource Mode=Self}, Path=Value, Converter={StaticResource ProgressForegroundConverter}}"
                                  />
+                            <TextBlock Margin="5,0,2,0">Prüfe alle </TextBlock>
+                            <TextBlock x:Name="Gsm_TextBlock_SignalQualityCheckIntervall" Text="?" />
+                            <TextBlock Margin="2,0">Sec.</TextBlock>
+                        </StackPanel>
                     </GroupBox>
 
                     <GroupBox Header="COM-Port" DockPanel.Dock="Left" Padding="5" >
@@ -209,7 +215,7 @@
                     <GroupBox Header="Aktionen" DockPanel.Dock="Right" >
                         <StackPanel>
                             <TextBlock>Sende SMS an:</TextBlock>
-                            <TextBox x:Name="Gsm_TextBox_TestSmsNumber_Reciever" Text="+4915195285304"/>
+                            <TextBox x:Name="Gsm_TextBox_TestSmsNumber_Reciever" Text="+4916095285304"/>
                             <TextBlock>Nachricht:</TextBlock>
                             <TextBox x:Name="Gsm_TextBox_TestSmsText" Height="100" Text="TestSms von MelBox2"/>
                             <Button Content="Sende Test-SMS" x:Name="Gsm_Button_SendTestSms" Click="Gsm_Button_SendTestSms_Click"/>
@@ -219,7 +225,7 @@
 
                     <GroupBox Header="Verlauf">
                         <ScrollViewer x:Name="Gsm_ScrollViewer_SerialPortResponse">
-                            <TextBox x:Name="Gsm_TextBox_SerialPortResponse" Text="Programmstart" TextChanged=" Gsm_TextBox_SerialPortResponse_TextChanged" />
+                            <TextBox x:Name="Gsm_TextBox_SerialPortResponse" TextChanged=" Gsm_TextBox_SerialPortResponse_TextChanged" FontSize="11" />
                         </ScrollViewer>
                     </GroupBox>
                 </DockPanel>

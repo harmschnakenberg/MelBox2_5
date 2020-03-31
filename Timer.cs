@@ -10,7 +10,7 @@ namespace MelBox2_5
 {
     public partial class MainWindow : Window
     {
-        private readonly int SignalQualityCheckTimerIntervalSeconds = Properties.Settings.Default.SignalQualityCheckTimerIntervalSeconds;
+        private int SignalQualityCheckTimerIntervalSeconds { get; } = Properties.Settings.Default.SignalQualityCheckTimerIntervalSeconds;
 
         DispatcherTimer _SignalQualityCheckTimer;
 

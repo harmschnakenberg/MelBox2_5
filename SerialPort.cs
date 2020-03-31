@@ -65,6 +65,7 @@ namespace MelBox2_5
                 //port.DiscardInBuffer();
 
                 SpManager.SerialPort.Write(command + "\r");
+
                 //MessageBox.Show("PortComandExe(" + command + ")");
             }
             catch (System.IO.IOException ex_io)
@@ -79,6 +80,24 @@ namespace MelBox2_5
 
         }
 
+
+        private void IsSimReady()
+        {           
+            Gsm_TextBox_SerialPortResponse.Text += "Prüfe SIM-Karte.\r\n";
+
+            var t = Task.Run(() =>
+            {
+                //Setzte Textmodus in GSM-Modem
+                PortComandExe("AT+CMEE=2");
+                System.Threading.Thread.Sleep(300);
+
+                //Setzte Speicherbereich im GSM-Modem "SM" SIM, "PM" Phone-Memory, "MT" + "SM" + "PM"
+                PortComandExe("AT+CPIN?");
+                System.Threading.Thread.Sleep(300);
+
+            });
+            _ = t.Wait(1000);
+        }
     }
 
     public class SerialSettings

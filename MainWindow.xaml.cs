@@ -32,17 +32,18 @@ namespace MelBox2_5
             Status_DockPanel.DataContext = status;
             Ticker_DataGrid_LastMessages.DataContext = status;
             Log_DataGrid_LastLogentries.DataContext = status;
+            Gsm_TextBox_SerialPortResponse.Text = "Programmstart\r\n";
 
             InitializeSerialPort();
             SpManager.StartListening();
-            SerialSettingsGrid.DataContext = SpManager.SerialPort;// new SerialSettings();
+            SerialSettingsGrid.DataContext = SpManager.SerialPort;
 
             StartSignalQualityCheckTimer();
-
-            //TODO:Prüfe, ob SIM eingelegt ist
+            Gsm_TextBlock_SignalQualityCheckIntervall.Text = SignalQualityCheckTimerIntervalSeconds.ToString();
 
             CheckGsmSignalQuality(this, null);
-           
+            IsSimReady();
+
             SubscribeForIncomingSms();
 
             Status_TextBlock_StartUpTime.Text = DateTime.Now.ToString("dd.MM.yyyy HH:mm");

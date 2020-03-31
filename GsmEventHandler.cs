@@ -36,35 +36,36 @@ namespace MelBox2_5
 
             var t = Task.Run(() => {
 
+                this.Gsm_TextBox_SerialPortResponse.Dispatcher.Invoke(DispatcherPriority.Background,
+                        new Action(() => { textBoxContent = this.Gsm_TextBox_SerialPortResponse.Text; }));
 
-            this.Gsm_TextBox_SerialPortResponse.Dispatcher.Invoke(DispatcherPriority.Background,
-                    new Action(() => { textBoxContent = this.Gsm_TextBox_SerialPortResponse.Text; }));
+                textBoxContent = textBoxContent.Replace("\r\n\r\n", "\r\n").Replace("\r\r","\r");
 
-            if (textBoxContent.Length > maxTextLength)
-                textBoxContent = textBoxContent.Remove(0, textBoxContent.Length - maxTextLength);
+                if (textBoxContent.Length > maxTextLength)
+                    textBoxContent = textBoxContent.Remove(0, textBoxContent.Length - maxTextLength);
 
-            // This application is connected to a GPS sending ASCCI characters, so data is converted to text
-            string str = Encoding.ASCII.GetString(e.Data);
+                // This application is connected to a GPS sending ASCCI characters, so data is converted to text
+                string str = Encoding.ASCII.GetString(e.Data);
 
-            if (str.Contains("ERROR"))
-            {
-                Log(Topic.SMS, Prio.Fehler, 2003272054, "Bei der Kommunikation mit dem GSM-Modem ist ein Fehler aufgetreten: " + str.Replace("\r\n", string.Empty));
-            }
+                if (str.Contains("ERROR"))
+                {
+                    Log(Topic.SMS, Prio.Fehler, 2003272054, "Bei der Kommunikation mit dem GSM-Modem ist ein Fehler aufgetreten: " + str.Replace("\r\n", string.Empty));
+                }
          
-            this.Gsm_TextBox_SerialPortResponse.Dispatcher.Invoke(DispatcherPriority.Background,
-                new Action(() => { this.Gsm_TextBox_SerialPortResponse.Text = textBoxContent + str; }));
+                this.Gsm_TextBox_SerialPortResponse.Dispatcher.Invoke(DispatcherPriority.Background,
+                    new Action(() => { this.Gsm_TextBox_SerialPortResponse.Text = textBoxContent + str; }));
 
+                //Antworten protokollieren
+                //string dir = System.IO.Path.GetDirectoryName(TextLogPath);
+                //if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
+
+                //using (System.IO.StreamWriter file = System.IO.File.AppendText(TextLogPath))
+                //{
+                //    file.WriteLine("\r\n" + DateTime.Now.ToShortTimeString() + ":\r\n" + str);
+                //}
 
             });
-            t.Wait();
-            //Antworten protokollieren
-            //string dir = System.IO.Path.GetDirectoryName(TextLogPath);
-            //if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
-
-            //using (System.IO.StreamWriter file = System.IO.File.AppendText(TextLogPath))
-            //{
-            //    file.WriteLine("\r\n" + DateTime.Now.ToShortTimeString() + ":\r\n" + str);
-            //}
+            t.Wait(2000);            
         }
 
         #endregion
@@ -132,25 +133,30 @@ namespace MelBox2_5
         #region SMS Empfangen
         void SubscribeForIncomingSms()
         {
-            //MessageBox.Show("Abboniere SMS-Benachrichtigungen.");
+            Gsm_TextBox_SerialPortResponse.Text += "Abboniere SMS-Benachrichtigungen.\r\n";
 
-            //Setzte Textmodus in GSM-Modem
-            PortComandExe("AT+CMGF=1");
-            System.Threading.Thread.Sleep(300);
+            var t = Task.Run(() =>
+            {
+                System.Threading.Thread.Sleep(300);
+                //Setzte Textmodus in GSM-Modem
+                PortComandExe("AT+CMGF=1");
+                System.Threading.Thread.Sleep(300);
 
-            //Setzte Speicherbereich im GSM-Modem "SM" SIM, "PM" Phone-Memory, "MT" + "SM" + "PM"
-            PortComandExe("AT+CPMS=\"MT\"");
-            System.Threading.Thread.Sleep(300);
+                //Setzte Speicherbereich im GSM-Modem "SM" SIM, "PM" Phone-Memory, "MT" + "SM" + "PM"
+                PortComandExe("AT+CPMS=\"MT\"");
+                System.Threading.Thread.Sleep(300);
 
-            //TODO: funktioniert nur sporadisch - warum?
-            //Aktiviere Benachrichtigung von GSM-Modem, wenn neue SMS ankommt
+                //TODO: funktioniert nur sporadisch - warum?
+                //Aktiviere Benachrichtigung von GSM-Modem, wenn neue SMS ankommt
 
-            PortComandExe("AT+CNMI=?");
-            System.Threading.Thread.Sleep(300);
+                PortComandExe("AT+CNMI=?");
+                System.Threading.Thread.Sleep(300);
 
 
-            PortComandExe("AT+CNMI=2,1,2,0,1");
-            System.Threading.Thread.Sleep(300);
+                PortComandExe("AT+CNMI=2,1,2,0,1");
+                System.Threading.Thread.Sleep(300);
+            });
+            _ = t.Wait(2000);
         }
 
         void CheckForIncomingSmsIndication(object sender, SerialDataEventArgs e)
@@ -201,14 +207,18 @@ namespace MelBox2_5
 
                 Contact contact = Sql.GetContactFromDb(0, "", "", smsHeader[1], "");
 
+                DateTime recDate = DateTime.ParseExact(smsHeader[3], "yy/MM/dd", CultureInfo.InvariantCulture);
+                TimeSpan recDateTime = TimeSpan.Parse(smsHeader[4].Substring(0, 7));
+               
                 IncomingMessage = new Message()
                 {
                     From = contact,
-                    RecieveTime = DateTime.Parse(smsHeader[3]),
+                    RecieveTime = recDate.Add(recDateTime),                    
                     Status = MessageType.RecievedFromSms
                 };
 
                 WaitForSmsContent = true;
+                return;
             }
 
             if (WaitForSmsContent)
@@ -216,11 +226,14 @@ namespace MelBox2_5
                 MessageBox.Show(str);
 
                 //Nachrichteninhalt?
-                if (!str.StartsWith("AT+") && !str.StartsWith("+") && !str.StartsWith("OK") && str.Contains("\r\n\r\n"))
+                if (!str.StartsWith("AT+") && !str.StartsWith("+") && !str.StartsWith("\r\nOK")) //&& str.Contains("\r\n\r\n")
                 {
-                    IncomingMessage.Content = str.Replace("\r\n", string.Empty);
-                    //TODO: Eingegangene SMS in Datenbank schreiben
+                    string messageContent = str.Replace("\r", string.Empty).Replace("\n", string.Empty);
 
+                    if (messageContent.EndsWith("OK")) messageContent = messageContent.Substring(0, messageContent.Length - 3);
+
+                    IncomingMessage.Content = messageContent;
+                    
                     Sql.CreateMessageEntry(IncomingMessage);
 
                     IncomingMessage = null;
@@ -254,6 +267,7 @@ namespace MelBox2_5
             PortComandExe("AT+CMGF=1");
             System.Threading.Thread.Sleep(500);
 
+            //FUNKTIONIERT!
             PortComandExe("AT+CMGS=\"+" + phone + "\"\r");
             System.Threading.Thread.Sleep(1000);
             PortComandExe(content + ctrlz);

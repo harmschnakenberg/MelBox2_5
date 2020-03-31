@@ -589,7 +589,8 @@ namespace MelBox2_5
             }
             else
             {
-                return true;
+                ShowLastMessages();
+                return true;                
             }
 
             #endregion
