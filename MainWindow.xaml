@@ -209,9 +209,9 @@
                     <GroupBox Header="Aktionen" DockPanel.Dock="Right" >
                         <StackPanel>
                             <TextBlock>Sende SMS an:</TextBlock>
-                            <TextBox x:Name="Gsm_TextBox_TestSmsNumber_Reciever" />
+                            <TextBox x:Name="Gsm_TextBox_TestSmsNumber_Reciever" Text="+4915195285304"/>
                             <TextBlock>Nachricht:</TextBlock>
-                            <TextBox x:Name="Gsm_TextBox_TestSmsText" Height="100" />
+                            <TextBox x:Name="Gsm_TextBox_TestSmsText" Height="100" Text="TestSms von MelBox2"/>
                             <Button Content="Sende Test-SMS" x:Name="Gsm_Button_SendTestSms" Click="Gsm_Button_SendTestSms_Click"/>
                             <Button Content="Warte auf SMS" Margin="0,10" x:Name="Gsm_Button_SubscribeWaitForSms" Click="Gsm_Button_SubscribeWaitForSms_Click" />
                         </StackPanel>

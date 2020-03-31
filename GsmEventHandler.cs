@@ -34,6 +34,9 @@ namespace MelBox2_5
             int maxTextLength = 1000; // maximum text length in text box
             string textBoxContent = string.Empty; //für Inhalt der TextBox
 
+            var t = Task.Run(() => {
+
+
             this.Gsm_TextBox_SerialPortResponse.Dispatcher.Invoke(DispatcherPriority.Background,
                     new Action(() => { textBoxContent = this.Gsm_TextBox_SerialPortResponse.Text; }));
 
@@ -51,6 +54,9 @@ namespace MelBox2_5
             this.Gsm_TextBox_SerialPortResponse.Dispatcher.Invoke(DispatcherPriority.Background,
                 new Action(() => { this.Gsm_TextBox_SerialPortResponse.Text = textBoxContent + str; }));
 
+
+            });
+            t.Wait();
             //Antworten protokollieren
             //string dir = System.IO.Path.GetDirectoryName(TextLogPath);
             //if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
@@ -248,7 +254,9 @@ namespace MelBox2_5
             PortComandExe("AT+CMGF=1");
             System.Threading.Thread.Sleep(500);
 
-            PortComandExe("AT+CMGS=\"+" + phone + "\"\r" + content + ctrlz);
+            PortComandExe("AT+CMGS=\"+" + phone + "\"\r");
+            System.Threading.Thread.Sleep(1000);
+            PortComandExe(content + ctrlz);
 
         }
 

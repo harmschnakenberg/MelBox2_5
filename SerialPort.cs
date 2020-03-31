@@ -61,8 +61,8 @@ namespace MelBox2_5
                     }
                 }
 
-                port.DiscardOutBuffer();
-                port.DiscardInBuffer();
+                //port.DiscardOutBuffer();
+                //port.DiscardInBuffer();
 
                 SpManager.SerialPort.Write(command + "\r");
                 //MessageBox.Show("PortComandExe(" + command + ")");
