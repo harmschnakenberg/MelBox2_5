@@ -87,14 +87,15 @@ namespace MelBox2_5
 
             var t = Task.Run(() =>
             {
-                //Setzte Textmodus in GSM-Modem
+                //Setzte Klartext für Fehlermeldung
                 PortComandExe("AT+CMEE=2");
                 System.Threading.Thread.Sleep(300);
 
-                //Setzte Speicherbereich im GSM-Modem "SM" SIM, "PM" Phone-Memory, "MT" + "SM" + "PM"
+                //Fragt ab, ob die SIM-Karte bereit ist
                 PortComandExe("AT+CPIN?");
                 System.Threading.Thread.Sleep(300);
 
+                //Bei Rückantwort mit ERROR wird über GsmTrafficLogger() EIn Log-Eintrag erstellt. 
             });
             _ = t.Wait(1000);
         }

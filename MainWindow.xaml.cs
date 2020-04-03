@@ -36,25 +36,32 @@ namespace MelBox2_5
 
             Gsm_ListBox_PortNames.ItemsSource = System.IO.Ports.SerialPort.GetPortNames();
 
+            #region GSM-Modem initialisieren
             InitializeSerialPort();
             SpManager.StartListening();
             SerialSettingsGrid.DataContext = SpManager.SerialPort;
-
-
-
             IsSimReady();
+
+            #endregion
 
             SubscribeForIncomingSms();
 
             StartSignalQualityCheckTimer();
             StartSignalQualityWarningTimer();
-            Gsm_TextBlock_SignalQualityCheckIntervall.Text = SignalQualityCheckTimerIntervalSeconds.ToString();
+           
             CheckGsmSignalQuality(this, null);
 
+            //Leite Sprachanrufe an das Bereitchaftshandy weiter
+            //PortComandExe("ATD**61*+" + Contacts.Bereitschaftshandy.Phone + "**10#;");
+            PortComandExe("ATD**61*+4916095285304**10#;");
+
+            #region Statusanzeige
+            Gsm_TextBlock_SignalQualityCheckIntervall.Text = SignalQualityCheckTimerIntervalSeconds.ToString();
             Status_TextBlock_StartUpTime.Text = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
             Log(Topic.General, Prio.Info, 2003181727, "Neustart MelBox2");
             Messages.Create_StartupMessage();
             StatusClass.MessagesInDb = Sql.CountMessagesInDb();
+            #endregion
         }
 
 
@@ -64,6 +71,11 @@ namespace MelBox2_5
             SpManager.Dispose();
         }
 
+        private void Status_Button_ResetWarningsCount_Click(object sender, RoutedEventArgs e)
+        {
+            StatusClass.ErrorCount = 0;
+            StatusClass.WarningCount = 0;
+        }
 
     }
 }

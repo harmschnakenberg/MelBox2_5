@@ -229,7 +229,9 @@
                             <Separator/>
                             <Button Content="Warte auf SMS" Margin="0,10" x:Name="Gsm_Button_SubscribeWaitForSms" Click="Gsm_Button_SubscribeWaitForSms_Click" />
 
-                        </StackPanel>
+                            <Separator/>
+                                <Button x:Name="Status_Button_ResetWarningsCount" Content="Reset Fehlerzähler" Margin="0,10" Click="Status_Button_ResetWarningsCount_Click" />
+                            </StackPanel>
                     </GroupBox>
 
                     <GroupBox Header="Verlauf">
