@@ -34,17 +34,22 @@ namespace MelBox2_5
             Log_DataGrid_LastLogentries.DataContext = status;
             Gsm_TextBox_SerialPortResponse.Text = "Programmstart\r\n";
 
+            Gsm_ListBox_PortNames.ItemsSource = System.IO.Ports.SerialPort.GetPortNames();
+
             InitializeSerialPort();
             SpManager.StartListening();
             SerialSettingsGrid.DataContext = SpManager.SerialPort;
 
-            StartSignalQualityCheckTimer();
-            Gsm_TextBlock_SignalQualityCheckIntervall.Text = SignalQualityCheckTimerIntervalSeconds.ToString();
 
-            CheckGsmSignalQuality(this, null);
+
             IsSimReady();
 
             SubscribeForIncomingSms();
+
+            StartSignalQualityCheckTimer();
+            StartSignalQualityWarningTimer();
+            Gsm_TextBlock_SignalQualityCheckIntervall.Text = SignalQualityCheckTimerIntervalSeconds.ToString();
+            CheckGsmSignalQuality(this, null);
 
             Status_TextBlock_StartUpTime.Text = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
             Log(Topic.General, Prio.Info, 2003181727, "Neustart MelBox2");
@@ -55,7 +60,7 @@ namespace MelBox2_5
 
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
+        {           
             SpManager.Dispose();
         }
 

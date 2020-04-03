@@ -16,6 +16,8 @@ namespace MelBox2_5
   
     public partial class MainWindow : Window
     {
+        public int MinRequieredSignalQuality { get; } = Properties.Settings.Default.MinRequieredSignalQuality;
+
         #region Protokollierung GSM-Datenverkehr
         private void Gsm_TextBox_SerialPortResponse_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -49,7 +51,7 @@ namespace MelBox2_5
 
                 if (str.Contains("ERROR"))
                 {
-                    Log(Topic.SMS, Prio.Fehler, 2003272054, "Bei der Kommunikation mit dem GSM-Modem ist ein Fehler aufgetreten: " + str.Replace("\r\n", string.Empty));
+                    Log(Topic.SMS, Prio.Fehler, 2003272054, "Fehler Antwort GSM-Modem: " + str.Replace("\r\n"," "));
                 }
          
                 this.Gsm_TextBox_SerialPortResponse.Dispatcher.Invoke(DispatcherPriority.Background,
@@ -112,12 +114,12 @@ namespace MelBox2_5
                     int.TryParse(m.Value.Remove(0, 4).Trim(','), out int signalQuality);
 
                     this.Gsm_TextBox_SerialPortResponse.Dispatcher.Invoke(DispatcherPriority.Normal,
-                        new Action(() => { this.Gsm_ProgressBar_SignalQuality.Value = signalQuality; }));
+                        new Action(() => { this.Status_ProgressBar_SignalQuality.Value = signalQuality; }));
 
                     StatusClass.GsmSignalQuality = signalQuality;
 
-                    //Wenn signalQuality < 10 Nachricht an Admin
-                    if (signalQuality < 10)
+                    //Wenn signalQuality zu gering ist: Nachricht an Admin
+                    if (signalQuality < MinRequieredSignalQuality)
                         Messages.Create_SignalQualityMessage(signalQuality);
                 }
                 finally
@@ -137,26 +139,26 @@ namespace MelBox2_5
 
             var t = Task.Run(() =>
             {
-                System.Threading.Thread.Sleep(300);
+                //System.Threading.Thread.Sleep(300);
                 //Setzte Textmodus in GSM-Modem
                 PortComandExe("AT+CMGF=1");
-                System.Threading.Thread.Sleep(300);
+                //System.Threading.Thread.Sleep(300);
 
                 //Setzte Speicherbereich im GSM-Modem "SM" SIM, "PM" Phone-Memory, "MT" + "SM" + "PM"
                 PortComandExe("AT+CPMS=\"MT\"");
-                System.Threading.Thread.Sleep(300);
+                //System.Threading.Thread.Sleep(300);
 
                 //TODO: funktioniert nur sporadisch - warum?
                 //Aktiviere Benachrichtigung von GSM-Modem, wenn neue SMS ankommt
 
                 PortComandExe("AT+CNMI=?");
-                System.Threading.Thread.Sleep(300);
+                //System.Threading.Thread.Sleep(300);
 
 
                 PortComandExe("AT+CNMI=2,1,2,0,1");
-                System.Threading.Thread.Sleep(300);
+                //System.Threading.Thread.Sleep(300);
             });
-            _ = t.Wait(2000);
+            _ = t.Wait(1000);
         }
 
         void CheckForIncomingSmsIndication(object sender, SerialDataEventArgs e)
@@ -237,6 +239,9 @@ namespace MelBox2_5
                     Sql.CreateMessageEntry(IncomingMessage);
 
                     IncomingMessage = null;
+
+                    if(str.EndsWith("OK\r\n"))
+
                     WaitForSmsContent = false;
                     SpManager.NewSerialDataRecieved -= ReadIncomingMessagePart1;
                 }
@@ -277,6 +282,65 @@ namespace MelBox2_5
         private void Gsm_Button_SubscribeWaitForSms_Click(object sender, RoutedEventArgs e)
         {
             SubscribeForIncomingSms();
+        }
+
+        #endregion
+
+        #region Sprachanrufe
+        private void Gsm_Button_StartVoicCall_Click(object sender, RoutedEventArgs e)
+        {
+            ulong phone = HelperClass.ConvertStringToPhonenumber(Gsm_TextBox_TestSmsNumber_Reciever.Text);
+           
+            if (phone == 0)
+            {
+                MessageBox.Show("Die Telefonnummer >" + Gsm_TextBox_TestSmsNumber_Reciever.Text + "< ist ungültig!", "MelBox2", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return;
+            }
+            else
+            {
+               MessageBoxResult r = MessageBox.Show("Telefonnummer +" + phone + " anrufen?", "MelBox2", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                if (r== MessageBoxResult.Yes)
+                {
+                    PortComandExe("ATD+" + phone + ";");
+                }
+
+                System.Threading.Thread.Sleep(10000);
+                //Auflegen
+                PortComandExe("AT+CHUP");
+                
+            }          
+        }
+
+        private void Gas_Button_RedirectVoiceCallsOn_Click(object sender, RoutedEventArgs e)
+        {
+            ulong phone = HelperClass.ConvertStringToPhonenumber(Gsm_TextBox_TestSmsNumber_Reciever.Text);
+            int[] secondsToForward = { 5, 10, 15, 20, 25, 30 };
+
+            if (phone == 0)
+            {
+                MessageBox.Show("Die Telefonnummer >" + Gsm_TextBox_TestSmsNumber_Reciever.Text + "< ist ungültig!", "MelBox2", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return;
+            }
+            else
+            {
+                MessageBoxResult r = MessageBox.Show("Sprachanrufe umleiten an Telefonnummer +" + phone + "?", "MelBox2", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                if (r == MessageBoxResult.Yes)
+                {
+                    PortComandExe("ATD**61*+" + phone + "**" + secondsToForward[1] + "#;");
+                }
+            }
+        }
+
+        private void Gas_Button_RedirectVoiceCallsOff_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBoxResult r = MessageBox.Show("Umleitung Sprachanrufe deaktivieren?", "MelBox2", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (r == MessageBoxResult.Yes)
+            {
+                PortComandExe("ATD##61#;");
+            }
         }
 
         #endregion

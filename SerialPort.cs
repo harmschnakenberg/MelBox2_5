@@ -100,7 +100,7 @@ namespace MelBox2_5
         }
     }
 
-    public class SerialSettings
+    public static class SerialSettings
     {
         public static string PortName => SerialPort.GetPortNames().Contains(Properties.Settings.Default.PortName) ? Properties.Settings.Default.PortName : SerialPort.GetPortNames().LastOrDefault();
 
@@ -170,6 +170,7 @@ namespace MelBox2_5
                 // Subscribe to event and open serial port for data
                 SerialPort.DataReceived += new SerialDataReceivedEventHandler(SerialPort_DataReceived);
                 SerialPort.Open();
+                System.Threading.Thread.Sleep(500);
             }
             catch (ArgumentException ex_arg)
             {
@@ -185,7 +186,7 @@ namespace MelBox2_5
             }
             catch (System.IO.IOException ex_io)
             {
-                string msg = "Das Gsm-Modem konnte nicht erreicht werden. " + ex_io.Message;
+                string msg = "Das GSM-Modem konnte nicht erreicht werden. " + ex_io.Message;
                 //MessageBox.Show(msg, "ACHTUNG", MessageBoxButton.OK, MessageBoxImage.Error);
                 MainWindow.Log(MainWindow.Topic.COM, MainWindow.Prio.Fehler, 2003262224, msg);
             }

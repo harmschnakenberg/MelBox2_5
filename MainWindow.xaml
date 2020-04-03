@@ -13,6 +13,65 @@
     </Window.Resources>
 
     <Grid>
+        <DockPanel x:Name="Status_DockPanel">
+            <StatusBar DockPanel.Dock="Bottom">
+                <StatusBarItem Content="Status" />
+                <StatusBarItem>
+                    <WrapPanel>
+                        <Image Source="/Resources/signal.png" Margin="2,0" Width="15" />
+                        <ProgressBar Grid.Column="2" ToolTip="Signalstärke GSM-Netz" 
+                                 Orientation="Vertical"
+                                 Maximum="31" 
+                                 Width="10"
+                                 x:Name="Status_ProgressBar_SignalQuality" 
+                                 Foreground="{Binding ElementName=Status_ProgressBar_SignalQuality, Path=Value, Converter={StaticResource ProgressForegroundConverter}}"
+                                 />
+                        <TextBlock FontSize="8" VerticalAlignment="Bottom" Text="{Binding ElementName=Status_ProgressBar_SignalQuality, Path=Value}"/>
+                    </WrapPanel>
+                </StatusBarItem>
+                <Separator Width="1" HorizontalAlignment="Center"/>
+                <StatusBarItem>
+                    <WrapPanel>
+                        <Image Source="/Resources/inbox.png" Margin="2,0" Width="15" ToolTip="Eingang"/>
+                        <TextBlock Text="{Binding InBox.Count}" ToolTip="in Bearbeitung"/>
+                        <TextBlock Text="/"/>
+                        <TextBlock Text="{Binding InMsgsSinceStartup}" ToolTip="seit Neustart"/>
+                    </WrapPanel>
+                </StatusBarItem>
+                <Separator Width="1" HorizontalAlignment="Center"/>
+                <StatusBarItem>
+                    <WrapPanel>
+                        <Image Source="/Resources/server.png" Margin="2,0" Width="15" ToolTip="Meldungen in der Datenbank"/>
+                        <TextBlock Text="{Binding MessagesInDb}"/>
+                    </WrapPanel>
+                </StatusBarItem>
+                <Separator Width="1" HorizontalAlignment="Center"/>
+                <StatusBarItem>
+                    <WrapPanel>
+                        <Image Source="/Resources/outbox.png" Margin="2,0" Width="15" ToolTip="Ausgang"/>
+                        <TextBlock Text="{Binding OutBox.Count}" ToolTip="in Bearbeitung"/>
+                        <TextBlock Text="/"/>
+                        <TextBlock Text="{Binding OutMsgsSinceStartup}" ToolTip="seit Neustart"/>
+                    </WrapPanel>
+                </StatusBarItem>
+                <Separator Width="1" HorizontalAlignment="Center"/>
+                <StatusBarItem>
+                    <WrapPanel>
+                        <Image Source="/Resources/trash.png" Margin="2,0" Width="15" ToolTip="Fehlermeldungen / verworfene Nachrichten seit Neustart"/>
+                        <TextBlock Text="{Binding ErrorCount}" Foreground="Red"/>
+                        <TextBlock Text="/"/>
+                        <TextBlock Text="{Binding WarningCount}" Foreground="Orange"/>
+                    </WrapPanel>
+                </StatusBarItem>
+                <Separator Width="1" HorizontalAlignment="Center"/>
+                <StatusBarItem>
+                    <WrapPanel>
+                        <TextBlock Text="Neustart: "/>
+                        <TextBlock Text="-leer" x:Name="Status_TextBlock_StartUpTime"/>
+                    </WrapPanel>
+                </StatusBarItem>
+            </StatusBar>
+    
         <TabControl>
             <TabItem Header="Ticker">
                 <ScrollViewer>
@@ -107,78 +166,14 @@
                 </ScrollViewer>
             </TabItem>
             <TabItem Header="Modem">
-                <DockPanel x:Name="Status_DockPanel">
-                    <StatusBar DockPanel.Dock="Bottom">
-                        <StatusBarItem Content="Status" />
-                        <StatusBarItem>
-                            <WrapPanel>
-                                <Image Source="/Resources/signal.png" Margin="2,0" Width="15" />
-                                <ProgressBar Grid.Column="2" ToolTip="Signalstärke GSM-Netz" 
-                                 Orientation="Vertical"
-                                 Maximum="31" 
-                                 Width="10"
-                                 x:Name="Status_ProgressBar_SignalQuality" 
-                                 Foreground="{Binding GsmSignalQuality, Converter={StaticResource ProgressForegroundConverter}}"
-                                 />
-                            </WrapPanel>
-                        </StatusBarItem>
-                        <Separator Width="1" HorizontalAlignment="Center"/>
-                        <StatusBarItem>
-                            <WrapPanel>
-                                <Image Source="/Resources/inbox.png" Margin="2,0" Width="15" ToolTip="Eingang"/>
-                                <TextBlock Text="{Binding InBox.Count}" ToolTip="in Bearbeitung"/>
-                                <TextBlock Text="/"/>
-                                <TextBlock Text="{Binding InMsgsSinceStartup}" ToolTip="seit Neustart"/>
-                            </WrapPanel>
-                        </StatusBarItem>
-                        <Separator Width="1" HorizontalAlignment="Center"/>
-                        <StatusBarItem>
-                            <WrapPanel>
-                                <Image Source="/Resources/server.png" Margin="2,0" Width="15" ToolTip="Meldungen in der Datenbank"/>
-                                <TextBlock Text="{Binding MessagesInDb}"/>
-                            </WrapPanel>
-                        </StatusBarItem>
-                        <Separator Width="1" HorizontalAlignment="Center"/>
-                        <StatusBarItem>
-                            <WrapPanel>
-                                <Image Source="/Resources/outbox.png" Margin="2,0" Width="15" ToolTip="Ausgang"/>
-                                <TextBlock Text="{Binding OutBox.Count}" ToolTip="in Bearbeitung"/>
-                                <TextBlock Text="/"/>
-                                <TextBlock Text="{Binding OutMsgsSinceStartup}" ToolTip="seit Neustart"/>
-                            </WrapPanel>
-                        </StatusBarItem>
-                        <Separator Width="1" HorizontalAlignment="Center"/>
-                        <StatusBarItem>
-                            <WrapPanel>
-                                <Image Source="/Resources/trash.png" Margin="2,0" Width="15" ToolTip="Fehlermeldungen / verworfene Nachrichten seit Neustart"/>
-                                <TextBlock Text="{Binding ErrorCount}" Foreground="Red"/>
-                                <TextBlock Text="/"/>
-                                <TextBlock Text="{Binding WarningCount}" Foreground="Orange"/>
-                            </WrapPanel>
-                        </StatusBarItem>
-                        <Separator Width="1" HorizontalAlignment="Center"/>
-                        <StatusBarItem>
-                            <WrapPanel>
-                                <TextBlock Text="Neustart: "/>
-                                <TextBlock Text="-leer" x:Name="Status_TextBlock_StartUpTime"/>
-                            </WrapPanel>
-                        </StatusBarItem>
-                    </StatusBar>
-
-                    <GroupBox Header="Signalstärke" DockPanel.Dock="Top" >
-                        <StackPanel Orientation="Horizontal">
+                    <DockPanel>
+                        <!--<GroupBox Header="Signalstärke" DockPanel.Dock="Top" >
                             <ProgressBar Grid.Column="3" ToolTip="Signalstärke GSM-Netz" 
-                                 Maximum="31" 
-                                 Height="10"
-                                 MinWidth="600"
+                                 Maximum="31"                                                                  
                                  x:Name="Gsm_ProgressBar_SignalQuality" 
-                                 Foreground="{Binding RelativeSource={RelativeSource Mode=Self}, Path=Value, Converter={StaticResource ProgressForegroundConverter}}"
+                                 Foreground="{Binding RelativeSource={RelativeSource Mode=Self}, Path=Value, Converter={StaticResource ProgressForegroundConverter}}"                                     
                                  />
-                            <TextBlock Margin="5,0,2,0">Prüfe alle </TextBlock>
-                            <TextBlock x:Name="Gsm_TextBlock_SignalQualityCheckIntervall" Text="?" />
-                            <TextBlock Margin="2,0">Sec.</TextBlock>
-                        </StackPanel>
-                    </GroupBox>
+                        </GroupBox>-->
 
                     <GroupBox Header="COM-Port" DockPanel.Dock="Left" Padding="5" >
                         <Grid x:Name="SerialSettingsGrid" >
@@ -202,7 +197,8 @@
                             <Label Grid.Row="4" Content="Parität:" Grid.ColumnSpan="2"/>
                             <Label Grid.Row="5" Content="Stop-Bits:" Grid.ColumnSpan="2"/>
 
-                            <Label Grid.Row="1" Grid.Column="2" Content="{Binding PortName}"/>
+                            <ListBox Grid.Row="1" Grid.Column="2" IsEnabled="False" BorderThickness="0" VerticalAlignment="Center" x:Name="Gsm_ListBox_PortNames" SelectedValue="{Binding PortName}" />
+                            <!--<Label Grid.Row="1" Grid.Column="2" Content="{Binding PortName}"/>-->
                             <Label Grid.Row="2" Grid.Column="2" Content="{Binding BaudRate}"/>
                             <Label Grid.Row="3" Grid.Column="2" Content="{Binding DataBits}"/>
                             <Label Grid.Row="4" Grid.Column="2" Content="{Binding Parity}"/>
@@ -214,12 +210,25 @@
 
                     <GroupBox Header="Aktionen" DockPanel.Dock="Right" >
                         <StackPanel>
-                            <TextBlock>Sende SMS an:</TextBlock>
+                            <WrapPanel  Margin="0,2">
+                                <TextBlock>Prüfe Signal alle</TextBlock>
+                                <TextBlock Margin="2,0" x:Name="Gsm_TextBlock_SignalQualityCheckIntervall" Text="?" />
+                                <TextBlock>Sec.</TextBlock>
+                            </WrapPanel>
+                            
+                            <Separator/>
+                            <TextBlock>Telefonnummer:</TextBlock>
                             <TextBox x:Name="Gsm_TextBox_TestSmsNumber_Reciever" Text="+4916095285304"/>
+                            <Button Content="Anrufen" x:Name="Gsm_Button_StartVoicCall" Click="Gsm_Button_StartVoicCall_Click" />
+                            <Button Content="Rufumleitung ein" x:Name="Gas_Button_RedirectVoiceCallsOn" Click="Gas_Button_RedirectVoiceCallsOn_Click" />
+                            <Button Content="Rufumleitung aus" x:Name="Gas_Button_RedirectVoiceCallsOff" Click="Gas_Button_RedirectVoiceCallsOff_Click" />
+                            <Button Content="Sende SMS" x:Name="Gsm_Button_SendTestSms" Click="Gsm_Button_SendTestSms_Click"/>
                             <TextBlock>Nachricht:</TextBlock>
-                            <TextBox x:Name="Gsm_TextBox_TestSmsText" Height="100" Text="TestSms von MelBox2"/>
-                            <Button Content="Sende Test-SMS" x:Name="Gsm_Button_SendTestSms" Click="Gsm_Button_SendTestSms_Click"/>
+                            <TextBox x:Name="Gsm_TextBox_TestSmsText" Height="50" MaxLength="160" Text="TestSms von MelBox2"/>
+
+                            <Separator/>
                             <Button Content="Warte auf SMS" Margin="0,10" x:Name="Gsm_Button_SubscribeWaitForSms" Click="Gsm_Button_SubscribeWaitForSms_Click" />
+
                         </StackPanel>
                     </GroupBox>
 
@@ -228,8 +237,9 @@
                             <TextBox x:Name="Gsm_TextBox_SerialPortResponse" TextChanged=" Gsm_TextBox_SerialPortResponse_TextChanged" FontSize="11" />
                         </ScrollViewer>
                     </GroupBox>
-                </DockPanel>
-            </TabItem>
+
+                    </DockPanel>
+                </TabItem>
             <TabItem Header="Log" x:Name="Log_TabItem" PreviewMouseDown="Log_TabItem_PreviewMouseDown" >
                 <ScrollViewer>
                     <DataGrid x:Name="Log_DataGrid_LastLogentries" ItemsSource="{Binding LastLogEntries}">
@@ -239,5 +249,6 @@
             </TabItem>
 
         </TabControl>
+        </DockPanel>
     </Grid>
 </Window>

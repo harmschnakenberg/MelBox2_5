@@ -9,11 +9,15 @@ namespace MelBox2_5
     class Messages
     {
 
+        public static bool BlockSignalQualityMessages { get; set; } = false;
+
         #region Methoden
 
         internal static void Create_SignalQualityMessage(int signalQuality)
         {
-            //Mögliche Werte: 2 - 9 marginal, 10 - 14 OK, 15 - 19 Good, 20 - 30 Excellent, 99 = kein Signal
+            if (BlockSignalQualityMessages) return;
+
+                //Mögliche Werte: 2 - 9 marginal, 10 - 14 OK, 15 - 19 Good, 20 - 30 Excellent, 99 = kein Signal
             string signalStrength = "unbekannt";
 
             if (signalQuality < 3 || signalQuality >= 30)
@@ -51,6 +55,7 @@ namespace MelBox2_5
             };
 
             StatusClass.InBox.Add(notification);
+            BlockSignalQualityMessages = true;
         }
 
         //internal static void Create_NewUnknownContactMessage(Message recievedMessage, uint newContactId, string keyWord)

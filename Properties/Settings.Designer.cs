@@ -103,5 +103,23 @@ namespace MelBox2_5.Properties {
                 return ((int)(this["SignalQualityCheckTimerIntervalSeconds"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("8")]
+        public int MinRequieredSignalQuality {
+            get {
+                return ((int)(this["MinRequieredSignalQuality"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5")]
+        public int SignalQualityWarningPauseMinutes {
+            get {
+                return ((int)(this["SignalQualityWarningPauseMinutes"]));
+            }
+        }
     }
 }
