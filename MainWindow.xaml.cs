@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace MelBox2_5
@@ -40,20 +41,22 @@ namespace MelBox2_5
             InitializeSerialPort();
             SpManager.StartListening();
             SerialSettingsGrid.DataContext = SpManager.SerialPort;
+            StartGsmWriteTimer();
             IsSimReady();
-
             #endregion
 
             SubscribeForIncomingSms();
 
             StartSignalQualityCheckTimer();
             StartSignalQualityWarningTimer();
-           
+
             CheckGsmSignalQuality(this, null);
 
             //Leite Sprachanrufe an das Bereitchaftshandy weiter
-            //PortComandExe("ATD**61*+" + Contacts.Bereitschaftshandy.Phone + "**10#;");
-            PortComandExe("ATD**61*+4916095285304**10#;");
+
+            //PortComandExe("ATD**61*+" + Contacts.Bereitschaftshandy.Phone + "**10#;");            
+            //PortComandExe("ATD**61*+4916095285304**05#;");
+            GsmCommandQueue.Add("ATD**61*+4916095285304**05#;");
 
             #region Statusanzeige
             Gsm_TextBlock_SignalQualityCheckIntervall.Text = SignalQualityCheckTimerIntervalSeconds.ToString();

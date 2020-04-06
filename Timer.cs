@@ -36,5 +36,17 @@ namespace MelBox2_5
             _SignalQualityWarningPause.Interval = new TimeSpan(0, 0, SignalQualityWarningPause, 0);
             _SignalQualityWarningPause.Start();
         }
+
+        DispatcherTimer _GsmWriteTimer;
+
+        public void StartGsmWriteTimer()
+        {
+            _GsmWriteTimer = new DispatcherTimer();
+
+            //Pause zwischen Signalqualität Warnungen
+            _GsmWriteTimer.Tick += WriteNextGsmCommand;
+            _GsmWriteTimer.Interval = new TimeSpan(0, 0, 0, 1);
+            _GsmWriteTimer.Start();
+        }
     }
 }

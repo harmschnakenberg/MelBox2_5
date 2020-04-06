@@ -17,6 +17,8 @@ namespace MelBox2_5
 
         private static readonly string TextLogPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Log", string.Format("Log{0:000}.txt", DateTime.Now.DayOfYear));
 
+        public static List<string> GsmCommandQueue = new List<string>();
+
         private void InitializeSerialPort()
         {
             SpManager = new SerialPortManager();
@@ -80,24 +82,44 @@ namespace MelBox2_5
 
         }
 
+        /// <summary>
+        /// Führt das erste Kommando einer Liste aus und entfernt es anschließend aus der Liste.
+        /// </summary>
+        internal void WriteNextGsmCommand(object sender, EventArgs e)
+        {            
+            if (GsmCommandQueue.Count == 0) return;
+            var t = Task.Run(() =>
+            {
+                string command = GsmCommandQueue.FirstOrDefault();
+
+                PortComandExe(command);
+
+                GsmCommandQueue.RemoveAt(0);
+            });
+            t.Wait(1000);
+        }
+
 
         private void IsSimReady()
         {           
             Gsm_TextBox_SerialPortResponse.Text += "Prüfe SIM-Karte.\r\n";
 
-            var t = Task.Run(() =>
-            {
-                //Setzte Klartext für Fehlermeldung
-                PortComandExe("AT+CMEE=2");
-                System.Threading.Thread.Sleep(300);
+            GsmCommandQueue.Add("AT+CMEE=2");
+            GsmCommandQueue.Add("AT+CPIN?");
 
-                //Fragt ab, ob die SIM-Karte bereit ist
-                PortComandExe("AT+CPIN?");
-                System.Threading.Thread.Sleep(300);
+            //var t = Task.Run(() =>
+            //{
+            //    //Setzte Klartext für Fehlermeldung
+            //    PortComandExe("AT+CMEE=2");
+            //    System.Threading.Thread.Sleep(300);
 
-                //Bei Rückantwort mit ERROR wird über GsmTrafficLogger() EIn Log-Eintrag erstellt. 
-            });
-            _ = t.Wait(1000);
+            //    //Fragt ab, ob die SIM-Karte bereit ist
+            //    PortComandExe("AT+CPIN?");
+            //    System.Threading.Thread.Sleep(300);
+
+            //    //Bei Rückantwort mit ERROR wird über GsmTrafficLogger() EIn Log-Eintrag erstellt. 
+            //});
+            //_ = t.Wait(1000);
         }
     }
 

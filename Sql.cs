@@ -298,9 +298,16 @@ namespace MelBox2_5
                 if (keyWord.Length < 3 && messageContent.Length > 3) keyWord = HelperClass.GetKeyWords(messageContent);
 
                 contactId = CreateContact(name, email, phone, keyWord);
+                result = ExecuteRead(query, args);
             };
 
-            Contact contact = new Contact
+            if (result.Rows.Count == 0)
+            {
+                MainWindow.Log(MainWindow.Topic.Contacts, MainWindow.Prio.Fehler, 2004061544, "Ein Kontakt konte weder gefunden noch erstellt weerden.");
+                return null;
+            }
+
+                Contact contact = new Contact
             {
                 Id = contactId,
                 Name = result.Rows[0][0].ToString(),

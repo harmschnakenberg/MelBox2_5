@@ -42,6 +42,9 @@ namespace MelBox2_5
                 if (e.Action == NotifyCollectionChangedAction.Add)
                 {
                     OutMsgsSinceStartup++;
+                    System.Windows.MessageBox.Show(OutBox[OutBox.Count - 1].Content);
+
+                    
                 }
             };
         }

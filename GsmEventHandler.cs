@@ -83,8 +83,9 @@ namespace MelBox2_5
             //Ereignis abbonieren
             SpManager.NewSerialDataRecieved += ShowGsmSignalQuality;
 
-            //Signalqualität abfragen            
-            PortComandExe("AT+CSQ");
+            //Signalqualität abfragen    
+            GsmCommandQueue.Add("AT+CSQ");
+            //PortComandExe("AT+CSQ");
         }
 
         /// <summary>
@@ -134,31 +135,40 @@ namespace MelBox2_5
 
         #region SMS Empfangen
         void SubscribeForIncomingSms()
-        {
+        {            
             Gsm_TextBox_SerialPortResponse.Text += "Abboniere SMS-Benachrichtigungen.\r\n";
 
-            var t = Task.Run(() =>
-            {
-                //System.Threading.Thread.Sleep(300);
-                //Setzte Textmodus in GSM-Modem
-                PortComandExe("AT+CMGF=1");
-                //System.Threading.Thread.Sleep(300);
 
-                //Setzte Speicherbereich im GSM-Modem "SM" SIM, "PM" Phone-Memory, "MT" + "SM" + "PM"
-                PortComandExe("AT+CPMS=\"MT\"");
-                //System.Threading.Thread.Sleep(300);
-
-                //TODO: funktioniert nur sporadisch - warum?
-                //Aktiviere Benachrichtigung von GSM-Modem, wenn neue SMS ankommt
-
-                PortComandExe("AT+CNMI=?");
-                //System.Threading.Thread.Sleep(300);
+            GsmCommandQueue.Add("AT+CMGF=1");
+            GsmCommandQueue.Add("AT+CPMS=\"MT\"");
+            GsmCommandQueue.Add("AT+CNMI=?");
+            GsmCommandQueue.Add("AT+CNMI=2,1,2,0,1");
 
 
-                PortComandExe("AT+CNMI=2,1,2,0,1");
-                //System.Threading.Thread.Sleep(300);
-            });
-            _ = t.Wait(1000);
+            //System.Threading.Thread.Sleep(1000);
+
+            //var t = Task.Run(() =>
+            //{
+            //    //System.Threading.Thread.Sleep(300);
+            //    //Setzte Textmodus in GSM-Modem
+            //    PortComandExe("AT+CMGF=1");
+            //    //System.Threading.Thread.Sleep(300);
+
+            //    //Setzte Speicherbereich im GSM-Modem "SM" SIM, "PM" Phone-Memory, "MT" + "SM" + "PM"
+            //    PortComandExe("AT+CPMS=\"MT\"");
+            //    //System.Threading.Thread.Sleep(300);
+
+            //    //TODO: funktioniert nur sporadisch - warum?
+            //    //Aktiviere Benachrichtigung von GSM-Modem, wenn neue SMS ankommt
+
+            //    PortComandExe("AT+CNMI=?");
+            //    //System.Threading.Thread.Sleep(300);
+
+
+            //    PortComandExe("AT+CNMI=2,1,2,0,1");
+            //    //System.Threading.Thread.Sleep(300);
+            //});
+            //_ = t.Wait(1000);
         }
 
         void CheckForIncomingSmsIndication(object sender, SerialDataEventArgs e)
@@ -167,22 +177,27 @@ namespace MelBox2_5
             {
                 string str = Encoding.ASCII.GetString(e.Data);
 
-                    //Empfangshinweis für eingehende Nachricht ?
-                    if (str.Contains("+CMTI:"))
+                //Empfangshinweis für eingehende Nachricht ?
+                if (str.Contains("+CMTI:"))
                 {
                     string smsIdStr = System.Text.RegularExpressions.Regex.Match(str, @"\d+").Value;
 
                     if (int.TryParse(smsIdStr, out int smsId))
                     {
-                        PortComandExe("AT+CMGF=1");
-                        System.Threading.Thread.Sleep(300);
-
-                        PortComandExe("AT+CPMS=\"MT\"");
-                        System.Threading.Thread.Sleep(300);
-
+                        GsmCommandQueue.Add("AT+CMGF=1");
+                        GsmCommandQueue.Add("AT+CPMS=\"MT\"");
                         SpManager.NewSerialDataRecieved += ReadIncomingMessagePart1;
-                        PortComandExe("AT+CMGR=" + smsId);
-                        System.Threading.Thread.Sleep(300);
+                        GsmCommandQueue.Add("AT+CMGR=" + smsId);
+
+                        //PortComandExe("AT+CMGF=1");
+                        //System.Threading.Thread.Sleep(300);
+
+                        //PortComandExe("AT+CPMS=\"MT\"");
+                        //System.Threading.Thread.Sleep(300);
+
+                        //SpManager.NewSerialDataRecieved += ReadIncomingMessagePart1;
+                        //PortComandExe("AT+CMGR=" + smsId);
+                        //System.Threading.Thread.Sleep(300);
                     }
                     else
                     {
@@ -235,15 +250,18 @@ namespace MelBox2_5
                     if (messageContent.EndsWith("OK")) messageContent = messageContent.Substring(0, messageContent.Length - 3);
 
                     IncomingMessage.Content = messageContent;
-                    
-                    Sql.CreateMessageEntry(IncomingMessage);
+                                        
+                    if (str.EndsWith("OK\r\n"))
+                    {
+                        Sql.CreateMessageEntry(IncomingMessage);
 
-                    IncomingMessage = null;
+                        //TODO: Nachricht weiterleiten
+                        MessageBox.Show("SMS Empfangen");
 
-                    if(str.EndsWith("OK\r\n"))
-
-                    WaitForSmsContent = false;
-                    SpManager.NewSerialDataRecieved -= ReadIncomingMessagePart1;
+                        IncomingMessage = null;
+                        WaitForSmsContent = false;
+                        SpManager.NewSerialDataRecieved -= ReadIncomingMessagePart1;                        
+                    }
                 }
             }
         }
@@ -269,14 +287,18 @@ namespace MelBox2_5
                 return;
             }
 
-            PortComandExe("AT+CMGF=1");
-            System.Threading.Thread.Sleep(500);
 
-            //FUNKTIONIERT!
-            PortComandExe("AT+CMGS=\"+" + phone + "\"\r");
-            System.Threading.Thread.Sleep(1000);
-            PortComandExe(content + ctrlz);
+            //PortComandExe("AT+CMGF=1");
+            //System.Threading.Thread.Sleep(500);
 
+            ////FUNKTIONIERT!
+            //PortComandExe("AT+CMGS=\"+" + phone + "\"\r");
+            //System.Threading.Thread.Sleep(1000);
+            //PortComandExe(content + ctrlz);
+
+            GsmCommandQueue.Add("AT+CMGF=1");
+            GsmCommandQueue.Add("AT+CMGS=\"+" + phone + "\"\r");
+            GsmCommandQueue.Add(content + ctrlz);
         }
 
         private void Gsm_Button_SubscribeWaitForSms_Click(object sender, RoutedEventArgs e)
@@ -328,7 +350,8 @@ namespace MelBox2_5
 
                 if (r == MessageBoxResult.Yes)
                 {
-                    PortComandExe("ATD**61*+" + phone + "**" + secondsToForward[1] + "#;");
+                    GsmCommandQueue.Add("ATD**61*+" + phone + "**" + secondsToForward[1] + "#;");
+                    //PortComandExe("ATD**61*+" + phone + "**" + secondsToForward[1] + "#;");
                 }
             }
         }
