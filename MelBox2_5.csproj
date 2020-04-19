@@ -78,6 +78,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Calendar.cs" />
+    <Compile Include="Contacts.cs" />
     <Compile Include="DataClass.cs" />
     <Compile Include="GsmEventHandler.cs" />
     <Compile Include="HelperClass.cs" />

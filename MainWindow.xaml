@@ -250,6 +250,24 @@
                 </ScrollViewer>
             </TabItem>
 
+                <TabItem Header="Umlauf" >
+                    <StackPanel>
+                        <DataGrid ItemsSource="{Binding InBox}" >
+                            <DataGrid.DataContext>
+                                <local:StatusClass/>
+                            </DataGrid.DataContext>
+                        </DataGrid>
+                        
+                        <Separator Margin="10"/>
+                        
+                        <DataGrid ItemsSource="{Binding OutBox}" >
+                            <DataGrid.DataContext>
+                                <local:StatusClass/>
+                            </DataGrid.DataContext>
+                        </DataGrid>
+                    </StackPanel>
+                </TabItem>
+            
         </TabControl>
         </DockPanel>
     </Grid>

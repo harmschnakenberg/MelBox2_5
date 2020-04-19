@@ -13,7 +13,7 @@ using System.Windows.Controls;
 
 namespace MelBox2_5
 {
-  
+
     public partial class MainWindow : Window
     {
         public int MinRequieredSignalQuality { get; } = Properties.Settings.Default.MinRequieredSignalQuality;
@@ -30,7 +30,7 @@ namespace MelBox2_5
         /// <param name="sender"></param>
         /// <param name="e">Empfangene Daten</param>
         void GsmTrafficLogger(object sender, SerialDataEventArgs e)
-        {           
+        {
             //Quelle: https://stackoverflow.com/questions/4016921/wpf-invoke-a-control
 
             int maxTextLength = 1000; // maximum text length in text box
@@ -41,7 +41,7 @@ namespace MelBox2_5
                 this.Gsm_TextBox_SerialPortResponse.Dispatcher.Invoke(DispatcherPriority.Background,
                         new Action(() => { textBoxContent = this.Gsm_TextBox_SerialPortResponse.Text; }));
 
-                textBoxContent = textBoxContent.Replace("\r\n\r\n", "\r\n").Replace("\r\r","\r");
+                textBoxContent = textBoxContent.Replace("\r\n\r\n", "\r\n").Replace("\r\r", "\r");
 
                 if (textBoxContent.Length > maxTextLength)
                     textBoxContent = textBoxContent.Remove(0, textBoxContent.Length - maxTextLength);
@@ -51,9 +51,9 @@ namespace MelBox2_5
 
                 if (str.Contains("ERROR"))
                 {
-                    Log(Topic.SMS, Prio.Fehler, 2003272054, "Fehler Antwort GSM-Modem: " + str.Replace("\r\n"," "));
+                    Log(Topic.SMS, Prio.Fehler, 2003272054, "Fehler Antwort GSM-Modem: " + str.Replace("\r\n", " "));
                 }
-         
+
                 this.Gsm_TextBox_SerialPortResponse.Dispatcher.Invoke(DispatcherPriority.Background,
                     new Action(() => { this.Gsm_TextBox_SerialPortResponse.Text = textBoxContent + str; }));
 
@@ -67,7 +67,7 @@ namespace MelBox2_5
                 //}
 
             });
-            t.Wait(2000);            
+            t.Wait(2000);
         }
 
         #endregion
@@ -135,40 +135,19 @@ namespace MelBox2_5
 
         #region SMS Empfangen
         void SubscribeForIncomingSms()
-        {            
+        {
             Gsm_TextBox_SerialPortResponse.Text += "Abboniere SMS-Benachrichtigungen.\r\n";
 
-
+            //Setzte Textmodus in GSM-Modem
             GsmCommandQueue.Add("AT+CMGF=1");
+            //Setzte Speicherbereich im GSM-Modem "SM" SIM, "PM" Phone-Memory, "MT" + "SM" + "PM"
             GsmCommandQueue.Add("AT+CPMS=\"MT\"");
-            GsmCommandQueue.Add("AT+CNMI=?");
+
+            //Abfrage, welche Optionen für Empfangsindiaktor von GSM-Modem unterstützt werden
+            //GsmCommandQueue.Add("AT+CNMI=?");
+
+            //Setze Empfangsindiaktor von GSM-Modem senden
             GsmCommandQueue.Add("AT+CNMI=2,1,2,0,1");
-
-
-            //System.Threading.Thread.Sleep(1000);
-
-            //var t = Task.Run(() =>
-            //{
-            //    //System.Threading.Thread.Sleep(300);
-            //    //Setzte Textmodus in GSM-Modem
-            //    PortComandExe("AT+CMGF=1");
-            //    //System.Threading.Thread.Sleep(300);
-
-            //    //Setzte Speicherbereich im GSM-Modem "SM" SIM, "PM" Phone-Memory, "MT" + "SM" + "PM"
-            //    PortComandExe("AT+CPMS=\"MT\"");
-            //    //System.Threading.Thread.Sleep(300);
-
-            //    //TODO: funktioniert nur sporadisch - warum?
-            //    //Aktiviere Benachrichtigung von GSM-Modem, wenn neue SMS ankommt
-
-            //    PortComandExe("AT+CNMI=?");
-            //    //System.Threading.Thread.Sleep(300);
-
-
-            //    PortComandExe("AT+CNMI=2,1,2,0,1");
-            //    //System.Threading.Thread.Sleep(300);
-            //});
-            //_ = t.Wait(1000);
         }
 
         void CheckForIncomingSmsIndication(object sender, SerialDataEventArgs e)
@@ -188,16 +167,6 @@ namespace MelBox2_5
                         GsmCommandQueue.Add("AT+CPMS=\"MT\"");
                         SpManager.NewSerialDataRecieved += ReadIncomingMessagePart1;
                         GsmCommandQueue.Add("AT+CMGR=" + smsId);
-
-                        //PortComandExe("AT+CMGF=1");
-                        //System.Threading.Thread.Sleep(300);
-
-                        //PortComandExe("AT+CPMS=\"MT\"");
-                        //System.Threading.Thread.Sleep(300);
-
-                        //SpManager.NewSerialDataRecieved += ReadIncomingMessagePart1;
-                        //PortComandExe("AT+CMGR=" + smsId);
-                        //System.Threading.Thread.Sleep(300);
                     }
                     else
                     {
@@ -226,11 +195,11 @@ namespace MelBox2_5
 
                 DateTime recDate = DateTime.ParseExact(smsHeader[3], "yy/MM/dd", CultureInfo.InvariantCulture);
                 TimeSpan recDateTime = TimeSpan.Parse(smsHeader[4].Substring(0, 7));
-               
+
                 IncomingMessage = new Message()
                 {
                     From = contact,
-                    RecieveTime = recDate.Add(recDateTime),                    
+                    RecieveTime = recDate.Add(recDateTime),
                     Status = MessageType.RecievedFromSms
                 };
 
@@ -250,7 +219,7 @@ namespace MelBox2_5
                     if (messageContent.EndsWith("OK")) messageContent = messageContent.Substring(0, messageContent.Length - 3);
 
                     IncomingMessage.Content = messageContent;
-                                        
+
                     if (str.EndsWith("OK\r\n"))
                     {
                         Sql.CreateMessageEntry(IncomingMessage);
@@ -260,10 +229,129 @@ namespace MelBox2_5
 
                         IncomingMessage = null;
                         WaitForSmsContent = false;
-                        SpManager.NewSerialDataRecieved -= ReadIncomingMessagePart1;                        
+                        SpManager.NewSerialDataRecieved -= ReadIncomingMessagePart1;
                     }
                 }
             }
+        }
+
+        #endregion
+
+        #region SMS Senden
+
+        internal static int TimeOutSendSMSResponseMilliSeconds = Properties.Settings.Default.TimeOutSendSMSResponseMilliSeconds;
+        internal static bool BlockSmsSending = false;
+
+        /// <summary>
+        /// Sendet die Nachrichten aus OutBox, getriggert durch Timer alle X Minuten
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public static void SendMessageFromOutBox(object sender, EventArgs e)
+        {
+            if (StatusClass.OutBox.Count == 0) return;
+
+
+            Sql sql = new Sql();
+
+            MainWindow.CurrentRecievers = sql.GetCurrentRecievers();
+
+            //gehe durch ausstehende Nachrichten      
+            for (int i = 0; i < StatusClass.OutBox.Count; i++)
+            {
+                StatusClass.OutBox[i].SentTime = DateTime.UtcNow;
+                ++StatusClass.OutBox[i].SendingApproches;
+
+                //Entferne Nachrichten aus OutBox nach Überschreitung Max. Sendeversuche
+                if (StatusClass.OutBox[i].SendingApproches > Messages.MaxSendingApproches)
+                {
+                    MainWindow.Log(MainWindow.Topic.General, MainWindow.Prio.Fehler, 2004111307,
+                        "Max. Sendeversuche (" + Messages.MaxSendingApproches + ") überschritten. Verwerfe Nachricht: " + StatusClass.OutBox[i].Content.Substring(0, 32) + "...");
+                    StatusClass.OutBox.RemoveAt(i);
+                    continue;
+                }
+
+                // Nur wenn keine Empfänger vorgemerkt sind
+                if (StatusClass.OutBox[i].To.Count == 0)
+                {
+                    StatusClass.OutBox[i].To.AddRange(MainWindow.CurrentRecievers);
+                }
+
+                //gehe durch Empfänger
+                foreach (Contact reciever in StatusClass.OutBox[i].To)
+                {
+                    if (reciever.DeliverSms)
+                    {
+                        //Sende SMS
+                        MainWindow.SendSms(reciever.Phone, StatusClass.OutBox[i].Content);
+                    }
+
+                    if (reciever.DeliverEmail)
+                    {
+                        //TODO:Email versenden
+                        MainWindow.Log(MainWindow.Topic.Email, MainWindow.Prio.Warnung, 2004111230,
+                            "Senden von Email ist noch nicht implementiert. ID " + StatusClass.OutBox[i].Id + " " + StatusClass.OutBox[i].Content.Substring(0, 24) + 
+                            "... Zieladresse war: " + reciever.EmailAddress);
+                    }
+                }
+
+            }
+
+            sql.ShowLastMessages();
+        }
+
+        public static void SendSms(ulong phone, string content)
+        {
+            if (phone == 0)
+            {
+                Log(Topic.SMS, Prio.Fehler, 2004111246, "SendSms() die übergebene Telefonnummer ist ungültig.");
+            }
+
+            var t = Task.Run(() =>
+            {
+                //Warte, solange SMS senden gesperrt ist. Siehe CheckForOutgoingSmsIndication()
+                while (BlockSmsSending) { }
+            });
+            t.Wait(TimeOutSendSMSResponseMilliSeconds); //Timeout warten auf SMS sen
+
+            if (BlockSmsSending)
+            {
+                MainWindow.Log(MainWindow.Topic.SMS, MainWindow.Prio.Fehler, 2004131250, "SMS senden; Zeitüberschreitung (" + TimeOutSendSMSResponseMilliSeconds + " ms) bei Sendebestätigung.");
+            }
+
+            BlockSmsSending = true;
+
+            const string ctrlz = "\u001a";
+            content = content.Replace("\r\n", " ");
+            if (content.Length > 160) content = content.Substring(0, 160);
+
+            GsmCommandQueue.Add("AT+CMGS=\"+" + phone + "\"\r");
+            GsmCommandQueue.Add(content + ctrlz);
+
+            SpManager.NewSerialDataRecieved += CheckForOutgoingSmsIndication;
+        }
+
+        internal static void CheckForOutgoingSmsIndication(object sender, SerialDataEventArgs e)
+        {
+            var t = Task.Run(() =>
+            {
+                string str = Encoding.ASCII.GetString(e.Data);
+
+                //Sendehinweis für ausgegangene Nachricht ?
+                if (str.Contains("+CMGS:") && str.Contains("\r\nOK\r\n"))
+                {
+                    MessageBox.Show("200411 1327 Rükmeldung SMS versendet.");
+
+                    BlockSmsSending = false;
+                }
+                else if (str.Contains("+CMGS:") && str.Contains("ERROR"))
+                {
+                    MainWindow.Log(Topic.SMS, Prio.Fehler, 2004131211, "Fehler beim Senden einer SMS: " + str);
+                    BlockSmsSending = false;
+                }
+
+            });
+            
         }
 
         #endregion
@@ -312,7 +400,7 @@ namespace MelBox2_5
         private void Gsm_Button_StartVoicCall_Click(object sender, RoutedEventArgs e)
         {
             ulong phone = HelperClass.ConvertStringToPhonenumber(Gsm_TextBox_TestSmsNumber_Reciever.Text);
-           
+
             if (phone == 0)
             {
                 MessageBox.Show("Die Telefonnummer >" + Gsm_TextBox_TestSmsNumber_Reciever.Text + "< ist ungültig!", "MelBox2", MessageBoxButton.OK, MessageBoxImage.Exclamation);
@@ -320,9 +408,9 @@ namespace MelBox2_5
             }
             else
             {
-               MessageBoxResult r = MessageBox.Show("Telefonnummer +" + phone + " anrufen?", "MelBox2", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                MessageBoxResult r = MessageBox.Show("Telefonnummer +" + phone + " anrufen?", "MelBox2", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
-                if (r== MessageBoxResult.Yes)
+                if (r == MessageBoxResult.Yes)
                 {
                     PortComandExe("ATD+" + phone + ";");
                 }
@@ -330,8 +418,8 @@ namespace MelBox2_5
                 System.Threading.Thread.Sleep(10000);
                 //Auflegen
                 PortComandExe("AT+CHUP");
-                
-            }          
+
+            }
         }
 
         private void Gas_Button_RedirectVoiceCallsOn_Click(object sender, RoutedEventArgs e)

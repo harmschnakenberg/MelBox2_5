@@ -121,5 +121,35 @@ namespace MelBox2_5.Properties {
                 return ((int)(this["SignalQualityWarningPauseMinutes"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5")]
+        public int MaxSendingApproches {
+            get {
+                return ((int)(this["MaxSendingApproches"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public int PauseBetweenSendingApprochesMinutes {
+            get {
+                return ((int)(this["PauseBetweenSendingApprochesMinutes"]));
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("8000")]
+        public int TimeOutSendSMSResponseMilliSeconds {
+            get {
+                return ((int)(this["TimeOutSendSMSResponseMilliSeconds"]));
+            }
+            set {
+                this["TimeOutSendSMSResponseMilliSeconds"] = value;
+            }
+        }
     }
 }

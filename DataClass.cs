@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -42,16 +43,6 @@ namespace MelBox2_5
 
         public uint CompanyId { get; set; }
 
-        //public Company Company
-        //{
-        //    get
-        //    {
-        //        Sql sql = new Sql();
-        //        return sql.GetCompanyFromDb(CompanyId);
-        //    }
-        //    set => Company = value;
-        //}
-
         public System.Net.Mail.MailAddress Email { get; set; }
 
         public string EmailAddress
@@ -69,16 +60,31 @@ namespace MelBox2_5
             get { return (ContactType & MessageType.SentToEmail) == MessageType.SentToEmail; }
             set
             {
-
-                ContactType |= MessageType.SentToEmail;
-
+                if (value)
+                {
+                    ContactType |= MessageType.SentToEmail;
+                }
+                else
+                {
+                    ContactType ^= MessageType.SentToEmail;
+                }
             }
         }
 
         public bool DeliverSms
         {
             get { return (ContactType & MessageType.SentToSms) == MessageType.SentToEmail; }
-            set { ContactType |= MessageType.SentToSms; }
+            set 
+            {
+                if (value)
+                {
+                    ContactType |= MessageType.SentToSms;
+                }
+                else
+                {
+                    ContactType ^= MessageType.SentToSms;
+                }
+            }
         }
 
         public ushort MaxInactiveHours { get; set; }
@@ -122,5 +128,17 @@ namespace MelBox2_5
 
         //Weg der Nachricht
         public MessageType Status { get; set; }
+    }
+
+    public class Shift
+    {
+        public uint Id { get; set; }
+
+        public DateTime StartDate { get; set; }
+
+        public DateTime EndDate { get; set; }
+
+        public Contact Reciever { get; set; }
+
     }
 }

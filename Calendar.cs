@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +15,11 @@ namespace MelBox2_5
         public static int ShiftStartHourFriday { get; set; } = Properties.Settings.Default.ShiftStartHourFriday;
 
         public static int ShiftEndHour { get; set; } = Properties.Settings.Default.ShiftEndHour;
+
+        //internal static bool IsQueryForCurrentRecieversEnabled { get; set; } = true;
+
+        public static ObservableCollection<Contact> CurrentRecievers { get; set; }
+
 
         // Aus VB konvertiert
         private static DateTime DateOsterSonntag(DateTime pDate)
@@ -57,6 +63,18 @@ namespace MelBox2_5
             };
             return feiertage;
         }
+
+
+        ///// <summary>
+        ///// Die Abfragehäufigkeit nach den aktuellen EMpfängern wird durch einen Timer gedeckelt und hiermit wieder freigegeben.
+        ///// </summary>
+        ///// <param name="sender"></param>
+        ///// <param name="e"></param>
+        //internal void EnableQueryForCurrentRecievers(object sender, EventArgs e)
+        //{
+        //    IsQueryForCurrentRecieversEnabled = true;
+        //}
+
 
 
 

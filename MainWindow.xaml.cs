@@ -29,11 +29,15 @@ namespace MelBox2_5
         {
             InitializeComponent();
 
+            Log(Topic.General, Prio.Info, 2003181727, "Neustart MelBox2");
+
             StatusClass status = new StatusClass();
             Status_DockPanel.DataContext = status;
             Ticker_DataGrid_LastMessages.DataContext = status;
             Log_DataGrid_LastLogentries.DataContext = status;
             Gsm_TextBox_SerialPortResponse.Text = "Programmstart\r\n";
+
+            Contacts.PermanentSubscribers = Contacts.LoadContactsFromTextFile("PermanentRecievers.txt");
 
             Gsm_ListBox_PortNames.ItemsSource = System.IO.Ports.SerialPort.GetPortNames();
 
@@ -51,23 +55,25 @@ namespace MelBox2_5
             StartSignalQualityWarningTimer();
 
             CheckGsmSignalQuality(this, null);
+            StartSendMessageIntervallTimer();
+
 
             //Leite Sprachanrufe an das Bereitchaftshandy weiter
 
             //PortComandExe("ATD**61*+" + Contacts.Bereitschaftshandy.Phone + "**10#;");            
             //PortComandExe("ATD**61*+4916095285304**05#;");
-            GsmCommandQueue.Add("ATD**61*+4916095285304**05#;");
+            //GsmCommandQueue.Add("ATD**61*+4916095285304**05#;");
+            GsmCommandQueue.Add("ATD**61*+4915142265412**05#;");
 
             #region Statusanzeige
             Gsm_TextBlock_SignalQualityCheckIntervall.Text = SignalQualityCheckTimerIntervalSeconds.ToString();
             Status_TextBlock_StartUpTime.Text = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
-            Log(Topic.General, Prio.Info, 2003181727, "Neustart MelBox2");
+           
             Messages.Create_StartupMessage();
             StatusClass.MessagesInDb = Sql.CountMessagesInDb();
             #endregion
+
         }
-
-
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {           

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
@@ -65,9 +66,9 @@ namespace MelBox2_5
 
                         "INSERT INTO \"Contact\" (\"ID\", \"Time\", \"Name\", \"CompanyID\", \"Email\", \"Phone\", \"SendWay\" ) VALUES (2, " + DateTimeOffset.UtcNow.ToUnixTimeSeconds()+ ", 'MelBox2Admin', 1, 'harm.schnakenberg@kreutztraeger.de', 0," + (ushort)MessageType.SentToEmail + ");",
 
-                        "INSERT INTO \"Contact\" (\"ID\", \"Time\", \"Name\", \"CompanyID\", \"Email\", \"Phone\", \"SendWay\" ) VALUES (3, " + DateTimeOffset.UtcNow.ToUnixTimeSeconds() + ", 'Bereitschaftshandy', 1, 'bereitschaftshandy@kreutztraeger.de', 491728362586," + (ushort)MessageType.SentToSms + ");",
+                        "INSERT INTO \"Contact\" (\"ID\", \"Time\", \"Name\", \"CompanyID\", \"Email\", \"Phone\", \"SendWay\" ) VALUES (3, " + DateTimeOffset.UtcNow.ToUnixTimeSeconds() + ", 'Bereitschaftshandy', 1, 'bereitschaftshandy@kreutztraeger.de', 9999491728362586," + (ushort)MessageType.SentToSms + ");",
 
-                        "INSERT INTO \"Contact\" (\"ID\", \"Time\", \"Name\", \"CompanyID\", \"Email\", \"Phone\", \"SendWay\" ) VALUES (4, " + DateTimeOffset.UtcNow.ToUnixTimeSeconds() + ", 'Kreutzträger Service', 1, 'service@kreutztraeger.de', 0," +  (ushort)MessageType.SentToEmail + ");",
+                        "INSERT INTO \"Contact\" (\"ID\", \"Time\", \"Name\", \"CompanyID\", \"Email\", \"Phone\", \"SendWay\" ) VALUES (4, " + DateTimeOffset.UtcNow.ToUnixTimeSeconds() + ", 'Kreutzträger Service', 1, 'XXXservice@kreutztraeger.de', 0," +  (ushort)MessageType.SentToEmail + ");",
 
                         "INSERT INTO \"Contact\" (\"ID\", \"Time\", \"Name\", \"CompanyID\", \"Email\", \"Phone\", \"SendWay\" ) VALUES (5, " + DateTimeOffset.UtcNow.ToUnixTimeSeconds()+ ", 'Henry Kreutzträger', 1, 'henry.kreutztraeger@kreutztraeger.de', 491727889419," + (ushort)(MessageType.SentToEmail & MessageType.SentToSms) + ");",
 
@@ -94,7 +95,7 @@ namespace MelBox2_5
                         "(" + DateTimeOffset.UtcNow.ToUnixTimeSeconds() + ",0,1,1);",
 
                         "CREATE TABLE \"Shifts\"( \"ID\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"EntryTime\" INTEGER NOT NULL, " +
-                        "\"ContactID\" INTEGER NOT NULL, \"StartTime\" INTEGER NOT NULL, \"EndTime\" INTEGER NOT NULL, \"SendType\" INTEGER NOT NULL );",
+                        "\"ContactID\" INTEGER NOT NULL, \"StartTime\" INTEGER NOT NULL, \"EndTime\" INTEGER NOT NULL );",
 
                         "CREATE TABLE \"BlockedMessages\"( \"ID\" INTEGER NOT NULL UNIQUE, \"StartHour\" INTEGER NOT NULL, " +
                         "\"EndHour\" INTEGER NOT NULL, \"WorkdaysOnly\" INTEGER NOT NULL CHECK (\"WorkdaysOnly\" < 2));" +
@@ -114,7 +115,7 @@ namespace MelBox2_5
                 }
 
                 //Es muss mindestens ein Eintrag in der Tabelle "Shifts" vorhanden sein.
-                //Contact.ID = 3 => Berietschaftshandy
+                //Contact.ID = 3 => Bereitschaftshandy
                 CreateShiftDefault(GetContactFromDb(3));
             }
         }
@@ -407,8 +408,8 @@ namespace MelBox2_5
         {
             long entryTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-            string query = "INSERT INTO Shifts ( EntryTime, ContactID, StartTime, EndTime, SendType ) " +
-                           "VALUES ( @EntryTime, @ContactID, @StartTime, @EndTime, @SendType ); ";
+            string query = "INSERT INTO Shifts ( EntryTime, ContactID, StartTime, EndTime ) " +
+                           "VALUES ( @EntryTime, @ContactID, @StartTime, @EndTime); ";
 
             Dictionary<string, object> args = new Dictionary<string, object>()
             {
@@ -416,7 +417,7 @@ namespace MelBox2_5
                     {"@ContactID", contactId},
                     {"@StartTime", ((DateTimeOffset)startTime).ToUnixTimeSeconds()},
                     {"@EndTime", ((DateTimeOffset)endTime).ToUnixTimeSeconds()},
-                    {"@SendType", (int)sendingType},
+                   // {"@SendType", (int)sendingType},
             };
 
             int affectedRows = ExecuteWrite(query, args);
@@ -461,7 +462,69 @@ namespace MelBox2_5
             MainWindow.Log(MainWindow.Topic.Calendar, MainWindow.Prio.Info, 987654367,
                 "Erstelle automatische Bereitschaft von " + StartTime.ToString("dd.MM.yyyy HH:mm") + " bis " + EndTime.ToString("dd.MM.yyyy HH:mm"));
 
-            CreateShift(contact.Id, StartTime, EndTime, contact.ContactType);
+            CreateShift(contact.Id, StartTime.ToUniversalTime(), EndTime.ToUniversalTime(), contact.ContactType);
+        }
+
+        public ObservableCollection<Contact> GetCurrentRecievers()
+        {
+            ObservableCollection<Contact> currentRecievers = new ObservableCollection<Contact>();
+
+            #region Prüfe, ob es eine Schicht gibt, die heute beginnt    
+            const string query1 = "SELECT ID FROM Shifts WHERE strftime('%d-%m-%Y', datetime(StartTime, 'unixepoch')) = strftime('%d-%m-%Y','now')";
+
+            DataTable dt1 =  ExecuteRead(query1, null);
+           
+            if (dt1.Rows.Count == 0)
+            {
+                //Erzeuge eine neue Schicht für heute mit Standardwerten (Bereitschaftshandy)
+                CreateShiftDefault(Contacts.Bereitschaftshandy);
+            }
+
+            #endregion
+
+            #region Lese laufende Schichten aus der Datenbank
+            const string query2 =   "SELECT " +       
+                                    "ContactId " +                                   
+                                    "FROM Shifts " +
+                                    "WHERE strftime('%s','now') BETWEEN StartTime AND EndTime ";
+
+            DataTable dt2 = ExecuteRead(query2, null);
+
+            if (dt2 != null && dt2.Rows.Count > 0)
+            {
+                foreach (DataRow row in dt2.Rows)
+                {
+
+                    Contact reciever = GetContactFromDb(uint.Parse(row["ContactID"].ToString()));
+
+                    if (reciever == null)
+                    {
+                        MainWindow.Log(MainWindow.Topic.Contacts, MainWindow.Prio.Fehler, 2004081304,
+                            "Der Kontakt mit der ID [" + row["ContactID"] + " konnte nicht ermittelt werden. Datenbank prüfen!");
+                    }
+                    else
+                    {                       
+                        currentRecievers.Add(reciever);
+                    }
+                }
+            }
+            #endregion
+
+            foreach (Contact permanentListener in Contacts.PermanentSubscribers)
+            {
+                if (!currentRecievers.Contains(permanentListener))
+                    currentRecievers.Add(permanentListener);
+            }
+
+            if (currentRecievers.Count == 0)
+            {
+                MainWindow.Log(MainWindow.Topic.Contacts, MainWindow.Prio.Fehler, 2004101020,
+                            "Weder Bereitschaftsdienst noch stille Empfänger sind definiert. Sende an Service-Verteiler.");
+                currentRecievers.Add(Contacts.MelBox2Admin);
+                currentRecievers.Add(Contacts.KreuService);
+            }
+
+            return currentRecievers;
         }
 
         #endregion
@@ -481,7 +544,7 @@ namespace MelBox2_5
 
         internal void ShowLastMessages()
         {
-            const string query = "SELECT MessageContent.ID, " +
+            const string query = "SELECT Msg.ID, " +
                 "strftime('%d.%m.%Y %H:%M', datetime(RecieveTime, 'unixepoch', 'localtime')) AS Empfangen, " +
                 "(CASE WHEN Type & @TypeRecSms > 0 THEN 'true' ELSE 'false' END) AS von_SMS, " +
                 "(CASE WHEN Type & @TypeRecEmail > 0 THEN 'true' ELSE 'false' END) AS von_Email, " +

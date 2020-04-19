@@ -19,7 +19,9 @@ namespace MelBox2_5
             SMS,
             Internal,
             SQL,
-            COM
+            COM,
+            IO
+
         }
 
         public enum Prio

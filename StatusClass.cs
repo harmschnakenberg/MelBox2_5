@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace MelBox2_5
 {
@@ -17,36 +18,28 @@ namespace MelBox2_5
         {
             #region MessageCount
 
-            InBox.CollectionChanged += (sender, e) =>
-            {
-                if (e.Action == NotifyCollectionChangedAction.Add)
-                {
-                    InMsgsSinceStartup++;
-
-                    for (int i = 0; i < InBox.Count; i++)
-                    {
-                        Sql Sql = new Sql();
-                        if (Sql.CreateMessageEntry(InBox[i]))
-                        {
-                            Sql.ShowLastMessages();
-                            OutBox.Add(InBox[i]);
-                            InBox.RemoveAt(i);                            
-                        }
-                    }
-
-                }
-            };
-
-            OutBox.CollectionChanged += (sender, e) =>
-            {
-                if (e.Action == NotifyCollectionChangedAction.Add)
-                {
-                    OutMsgsSinceStartup++;
-                    System.Windows.MessageBox.Show(OutBox[OutBox.Count - 1].Content);
+            //InBox.CollectionChanged += (sender, e) =>
+            //{
+            //    if (e.Action == NotifyCollectionChangedAction.Add)
+            //    {
+            //        MessageBox.Show(InBox.Count + " | " + InBox.Last().Content);
 
                     
-                }
-            };
+            //    }
+            //};
+
+            //OutBox.CollectionChanged += (sender, e) =>
+            //{
+            //    if (e.Action == NotifyCollectionChangedAction.Add)
+            //    {
+            //        //System.Windows.MessageBox.Show(OutBox[OutBox.Count - 1].Content);
+
+            //        //Zähle den Gesmatzähler hoch
+            //        OutMsgsSinceStartup++;
+
+            //        //TODO: Nachrichten senden
+            //    }
+            //};
         }
 
         #endregion
@@ -58,9 +51,6 @@ namespace MelBox2_5
         private static uint _MessagesInDb = 0;
         private static uint _InMsgsSinceStartup = 0;
         private static uint _OutMsgsSinceStartup = 0;
-
-        private static readonly ObservableCollection<Message> _InBox = new ObservableCollection<Message>();
-        private static readonly ObservableCollection<Message> _OutBox = new ObservableCollection<Message>();
 
         private static DataTable _LastMessages;
         private static DataTable _LastLogEntries;
@@ -146,17 +136,18 @@ namespace MelBox2_5
             }
         }
 
-        public static ObservableCollection<Message> OutBox
-        {
-            get => _OutBox;
-        }
+        public static List<Message> OutBox { get; set; } = new List<Message>();
+        //{
+        //    get => _OutBox;
+        //}
 
 
-        public static ObservableCollection<Message> InBox
-        { 
-            get => _InBox;
-        }
+        //public static List<Message> InBox { get; set; } = new List<Message>();
+        //{ 
+        //    get => _InBox;
+        //}
 
+       
         #endregion
 
         #region Events
@@ -171,5 +162,32 @@ namespace MelBox2_5
 
         #endregion
 
+        #region Methods
+
+        public static void InBoxAdd(Message message)
+        {
+            InMsgsSinceStartup++;
+           
+            Sql sql = new Sql();
+
+            if (sql.CreateMessageEntry(message))
+            {
+                
+                OutBox.Add(message);
+            }
+            else
+            {
+                //InBox.Add(message);
+
+                MainWindow.Log(MainWindow.Topic.SQL, MainWindow.Prio.Fehler, 2004131107,
+                    "Eingegangene Nachricht konnte nicht in DB gespeichert werden; " + message.Content);
+            }
+
+            sql.ShowLastMessages();
+
+        }
+
+
+        #endregion
     }
 }

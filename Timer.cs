@@ -12,6 +12,8 @@ namespace MelBox2_5
     {
         private int SignalQualityCheckTimerIntervalSeconds { get; } = Properties.Settings.Default.SignalQualityCheckTimerIntervalSeconds;
         private int SignalQualityWarningPause { get; } = Properties.Settings.Default.SignalQualityWarningPauseMinutes;
+        public static int PauseBetweenSendingAttempts { get; set; } = Properties.Settings.Default.PauseBetweenSendingApprochesMinutes;
+
 
         DispatcherTimer _SignalQualityCheckTimer;
 
@@ -33,6 +35,8 @@ namespace MelBox2_5
 
             //Pause zwischen Signalqualität Warnungen
             _SignalQualityWarningPause.Tick += CheckGsmSignalQuality;
+            //Pause zwischen Abfragen der aktuellen Nachrichtenempfänger
+            //_SignalQualityWarningPause.Tick += EnableQueryForCurrentRecievers;
             _SignalQualityWarningPause.Interval = new TimeSpan(0, 0, SignalQualityWarningPause, 0);
             _SignalQualityWarningPause.Start();
         }
@@ -47,6 +51,18 @@ namespace MelBox2_5
             _GsmWriteTimer.Tick += WriteNextGsmCommand;
             _GsmWriteTimer.Interval = new TimeSpan(0, 0, 0, 1);
             _GsmWriteTimer.Start();
+        }
+
+        DispatcherTimer _SendMessageIntervallTimer;
+
+        public void StartSendMessageIntervallTimer()
+        {
+            _SendMessageIntervallTimer = new DispatcherTimer();
+
+            //Pause zwischen Sendeversuchen
+            _SendMessageIntervallTimer.Tick += SendMessageFromOutBox;
+            _SendMessageIntervallTimer.Interval = new TimeSpan(0, 0, PauseBetweenSendingAttempts, 0);
+            _SendMessageIntervallTimer.Start();
         }
     }
 }
